@@ -139,44 +139,22 @@
       <span id="cameraState" class="camera-state">準備中</span>
     </div>
     <p id="cameraHint" class="camera-hint" role="status"></p>
-
     <details id="cameraOptions" class="camera-options" hidden>
       <summary>ピント・ズーム・カメラ調整</summary>
       <div class="camera-options-body">
         <p id="cameraInfo"></p>
+        <p id="decoderInfo" class="camera-control-status"></p>
         <p>調整を閉じると読み取り再開。ぼける時は少し離し、バーコード左右の白い余白も枠内に入れてください。</p>
-
-        <label class="camera-setting" id="cameraDeviceRow">
-          <span>カメラ</span>
-          <select id="cameraDevice">
-            <option value="">背面（自動）</option>
-          </select>
-        </label>
-
-        <label class="camera-setting">
-          <span>画質</span>
-          <select id="cameraQuality">
-            <option value="high">高画質（4K優先）</option>
-            <option value="standard">標準（フルHD優先）</option>
-          </select>
-        </label>
-
+        <label class="camera-setting" id="cameraDeviceRow"><span>カメラ</span><select id="cameraDevice"><option value="">背面（自動）</option></select></label>
+        <label class="camera-setting"><span>画質</span><select id="cameraQuality"><option value="high">高画質（4K優先）</option><option value="standard">標準（フルHD優先）</option></select></label>
         <div id="cameraZoomRow" hidden>
-          <label class="camera-range-label" for="cameraZoom">
-            <span>ズーム</span>
-            <span id="cameraZoomValue"></span>
-          </label>
+          <label class="camera-range-label" for="cameraZoom"><span>ズーム</span><span id="cameraZoomValue"></span></label>
           <input type="range" id="cameraZoom" min="1" max="3" step="0.1" value="1">
         </div>
-
         <div id="cameraManualFocusRow" hidden>
-          <label class="camera-range-label" for="cameraManualFocus">
-            <span>手動ピント</span>
-            <span id="cameraFocusValue"></span>
-          </label>
+          <label class="camera-range-label" for="cameraManualFocus"><span>手動ピント</span><span id="cameraFocusValue"></span></label>
           <input type="range" id="cameraManualFocus" min="0" max="1" step="0.01" value="0">
         </div>
-
         <div class="camera-control-buttons">
           <button type="button" id="cameraFocus" class="btn secondary" hidden>自動ピント</button>
           <button type="button" id="cameraTorch" class="btn" aria-pressed="false" hidden>ライト OFF</button>
@@ -184,7 +162,6 @@
         <p id="cameraControlStatus" class="camera-control-status" role="status"></p>
       </div>
     </details>
-
     <canvas id="janCanvas" hidden></canvas>
   </section>
 
@@ -200,39 +177,16 @@
         <button type="button" id="presetQuantity" class="btn preset" aria-pressed="false">JAN＋在庫</button>
       </div>
     </div>
-
     <fieldset class="field-choices">
       <legend class="sr-only">入力する項目を選択</legend>
-      <label class="field-choice" for="choose-minDisplay">
-        <input type="checkbox" name="collectField" id="choose-minDisplay" value="minDisplay" data-field="minDisplay" checked>
-        <span>最低陳列量</span>
-      </label>
-      <label class="field-choice" for="choose-orderUnit">
-        <input type="checkbox" name="collectField" id="choose-orderUnit" value="orderUnit" data-field="orderUnit" checked>
-        <span>発注単位</span>
-      </label>
-      <label class="field-choice" for="choose-maxLTSales">
-        <input type="checkbox" name="collectField" id="choose-maxLTSales" value="maxLTSales" data-field="maxLTSales" checked>
-        <span>LT中の想定最大販売数</span>
-      </label>
-      <label class="field-choice" for="choose-salesFloorStock">
-        <input type="checkbox" name="collectField" id="choose-salesFloorStock" value="salesFloorStock" data-field="salesFloorStock" checked>
-        <span>売場在庫</span>
-      </label>
-      <label class="field-choice" for="choose-backroomStock">
-        <input type="checkbox" name="collectField" id="choose-backroomStock" value="backroomStock" data-field="backroomStock" checked>
-        <span>BR在庫</span>
-      </label>
-      <label class="field-choice" for="choose-accumulated">
-        <input type="checkbox" name="collectField" id="choose-accumulated" value="accumulated" data-field="accumulated" checked>
-        <span>累積値・未納品</span>
-      </label>
-      <label class="field-choice" for="choose-recordQuantity">
-        <input type="checkbox" name="collectField" id="choose-recordQuantity" value="recordQuantity" data-field="recordQuantity">
-        <span>在庫合計（売場＋BR）</span>
-      </label>
+      <label class="field-choice" for="choose-minDisplay"><input type="checkbox" name="collectField" id="choose-minDisplay" value="minDisplay" data-field="minDisplay" checked><span>最低陳列量</span></label>
+      <label class="field-choice" for="choose-orderUnit"><input type="checkbox" name="collectField" id="choose-orderUnit" value="orderUnit" data-field="orderUnit" checked><span>発注単位</span></label>
+      <label class="field-choice" for="choose-maxLTSales"><input type="checkbox" name="collectField" id="choose-maxLTSales" value="maxLTSales" data-field="maxLTSales" checked><span>LT中の想定最大販売数</span></label>
+      <label class="field-choice" for="choose-salesFloorStock"><input type="checkbox" name="collectField" id="choose-salesFloorStock" value="salesFloorStock" data-field="salesFloorStock" checked><span>売場在庫</span></label>
+      <label class="field-choice" for="choose-backroomStock"><input type="checkbox" name="collectField" id="choose-backroomStock" value="backroomStock" data-field="backroomStock" checked><span>BR在庫</span></label>
+      <label class="field-choice" for="choose-accumulated"><input type="checkbox" name="collectField" id="choose-accumulated" value="accumulated" data-field="accumulated" checked><span>累積値・未納品</span></label>
+      <label class="field-choice" for="choose-recordQuantity"><input type="checkbox" name="collectField" id="choose-recordQuantity" value="recordQuantity" data-field="recordQuantity"><span>在庫合計（売場＋BR）</span></label>
     </fieldset>
-
     <div id="modeSettings" class="mode-settings">
       <span class="mode-label" id="modeLabel">累積値・未納品の入力</span>
       <div class="mode-options" role="radiogroup" aria-labelledby="modeLabel">
@@ -240,7 +194,6 @@
         <label><input type="radio" id="modeSeparate" name="inputMode" value="separate">別々</label>
       </div>
     </div>
-
     <p id="selectionStatus" class="selection-status" role="status"></p>
     <p id="setupError" class="error" role="alert" hidden></p>
   </section>
@@ -258,20 +211,16 @@
 
 <nav id="actionDock" class="action-dock" aria-label="サンプリングの操作">
   <button type="button" id="beginSession" class="btn primary">開始・カメラ起動</button>
-
   <div id="scanActions" class="action-group scan-actions" hidden>
     <button type="button" id="manualJan" class="btn secondary" aria-haspopup="dialog" aria-controls="inputWizard">JANを手入力</button>
   </div>
-
   <div id="draftActions" class="action-group" hidden>
     <button type="button" id="resumeInput" class="btn primary" aria-haspopup="dialog" aria-controls="inputWizard">入力を再開</button>
     <button type="button" id="discardDraft" class="btn subtle danger">破棄して次へ</button>
   </div>
-
   <div id="resumeResultActions" class="action-group resume-result-actions" hidden>
     <button type="button" id="resumeResult" class="btn primary" aria-haspopup="dialog" aria-controls="resultDialog">結果に戻る</button>
   </div>
-
   <div id="commonActions" class="common-actions">
     <button type="button" id="cameraToggle" class="btn subtle" aria-controls="janVideo">カメラを停止</button>
     <button type="button" id="settingsButton" class="btn subtle" hidden>設定変更</button>
@@ -283,7 +232,6 @@
     <p id="resultContext" class="result-context"></p>
     <button type="button" id="resultClose" class="wizard-close">中断</button>
   </div>
-
   <div class="wizard-content result-content">
     <section id="resultPanel" class="panel result-panel" aria-labelledby="resultTitle" hidden>
       <div class="result-row" aria-live="polite" aria-atomic="true">
@@ -296,7 +244,6 @@
     </section>
     <p id="resultSubmissionStatus" class="submission-status" role="status" aria-live="polite"></p>
   </div>
-
   <div id="reviewActions" class="action-group review-actions" hidden>
     <button type="button" id="sendButton" class="btn primary">送信して次へ</button>
     <button type="button" id="editSample" class="btn" aria-haspopup="dialog" aria-controls="inputWizard">修正</button>
@@ -313,18 +260,14 @@
     </div>
     <button type="button" id="wizardClose" class="wizard-close">中断</button>
   </div>
-
   <div class="wizard-content">
     <h2 id="wizardTitle" class="wizard-title">最低陳列量</h2>
     <p id="wizardHint" class="wizard-hint">数量を入力して「次へ」</p>
-
     <div class="wizard-value-row">
       <input type="text" id="wizardValue" class="wizard-value" inputmode="none" autocomplete="off" readonly aria-label="入力値" aria-describedby="wizardHint wizardError">
       <button type="button" id="wizardClear" class="wizard-clear">クリア</button>
     </div>
-
     <p id="wizardError" class="wizard-error" role="alert" hidden></p>
-
     <div class="wizard-keypad" role="group" aria-label="数字入力">
       <button type="button" class="key" data-key="1">1</button>
       <button type="button" class="key" data-key="2">2</button>
@@ -340,7 +283,6 @@
       <button type="button" class="key utility" data-key="backspace" aria-label="1文字消す">⌫</button>
     </div>
   </div>
-
   <div class="wizard-actions">
     <button type="button" id="wizardBack" class="btn wizard-back">戻る</button>
     <button type="button" id="wizardNext" class="btn primary">次へ</button>
@@ -350,7 +292,7 @@
 <script>
 'use strict';
 
-const APP_VERSION = 'ordering-sampling-3.2.0';
+const APP_VERSION = 'ordering-sampling-3.3.0';
 const el = id => document.getElementById(id);
 
 // 共有された事前入力リンクのQ01〜Q20に対応。
@@ -442,7 +384,12 @@ let session = null;
 let currentSample = null;
 let sending = false;
 let readyHint = '読み取ると、選んだ項目の入力が始まります。';
-const wizard = {steps:[],index:0,replaceNext:false};
+
+const wizard = {
+  steps:[],
+  index:0,
+  replaceNext:false
+};
 
 function formatNumber(value) {
   return new Intl.NumberFormat('ja-JP').format(value);
@@ -455,7 +402,8 @@ function safeInteger(value,label) {
   return value;
 }
 
-// LT全体の最大販売数を直接使用。平均販売数や安全在庫は再加算しない。
+// LT全体の最大販売数を直接使用。
+// 平均販売数や安全在庫は再加算しない。
 function calculateModel(input) {
   HHT_FIELDS.forEach(key => {
     safeInteger(input[key],FIELD_INFO[key].label);
@@ -481,14 +429,8 @@ function calculateModel(input) {
     base + input.maxLTSales,
     '目標のサイクル合計'
   );
-  const reserve = safeInteger(
-    current - base,
-    'LT販売への備え'
-  );
-  const delta = safeInteger(
-    target - current,
-    'HHT入力値'
-  );
+  const reserve = safeInteger(current - base,'LT販売への備え');
+  const delta = safeInteger(target - current,'HHT入力値');
 
   return {stock,current,target,reserve,delta};
 }
@@ -506,18 +448,19 @@ function quantityOnly(fields) {
 }
 
 function deriveInventoryTotal(fields) {
-  return ['recordQuantity','salesFloorStock','backroomStock']
-    .every(key => fields.includes(key));
+  return [
+    'recordQuantity','salesFloorStock','backroomStock'
+  ].every(key => fields.includes(key));
 }
 
 function selectionLabel(fields) {
   return canCalculate(fields)
     ? 'HHT計算'
     : quantityOnly(fields)
-      ? 'JAN＋在庫'
-      : fields.length
-        ? '選択項目の記録'
-        : 'JANのみ';
+    ? 'JAN＋在庫'
+    : fields.length
+    ? '選択項目の記録'
+    : 'JANのみ';
 }
 
 function selectionChanged() {
@@ -529,6 +472,7 @@ function selectionChanged() {
     'aria-pressed',
     String(fields.length === HHT_FIELDS.length && canCalculate(fields))
   );
+
   el('presetQuantity').setAttribute(
     'aria-pressed',
     String(quantityOnly(fields))
@@ -557,9 +501,11 @@ function selectionChanged() {
 
 function setPreset(fields) {
   if (phase !== 'setup' || sending) return;
+
   COLLECTION_FIELDS.forEach(key => {
     el('choose-' + key).checked = fields.includes(key);
   });
+
   selectionChanged();
 }
 
@@ -600,29 +546,29 @@ function renderApp() {
     phase === 'ready' ? 'バーコードをかざしてください' :
     phase === 'paused' ? '入力を中断しています' :
     phase === 'input' ? '入力中' :
-    phase === 'sending' ? '送信中…' :
-    '結果を確認';
+    phase === 'sending' ? '送信中…' : '結果を確認';
 
   el('activeJan').textContent =
     currentSample && currentSample.raw.janCode
       ? currentSample.raw.janCode
       : '';
 
-  el('resultContext').textContent = currentSample
-    ? '店番 ' + currentSample.storeCode +
-      ' ｜ JAN ' + currentSample.raw.janCode
-    : '';
+  el('resultContext').textContent =
+    currentSample
+      ? '店番 ' + currentSample.storeCode +
+        ' ｜ JAN ' + currentSample.raw.janCode
+      : '';
 
   el('workHint').textContent =
     phase === 'ready' ? readyHint :
     phase === 'paused' ? '入力済みの値は保持しています。' :
-    review ? '修正する場合は「修正」を押してください。' :
-    '';
+    review ? '修正する場合は「修正」を押してください。' : '';
 
   const attempted = !!(currentSample && currentSample.attempted);
-  const config = currentSample && currentSample.record
-    ? getSendConfig(currentSample)
-    : null;
+  const config =
+    currentSample && currentSample.record
+      ? getSendConfig(currentSample)
+      : null;
 
   el('sendButton').disabled =
     sending || attempted || !config || config.state !== 'ready';
@@ -638,9 +584,9 @@ function renderApp() {
   el('nextAfterCheck').hidden = !(phase === 'review' && attempted);
   el('nextAfterCheck').disabled = sending;
   el('recordMeta').hidden = !attempted;
-  el('recordMeta').textContent = attempted
-    ? '確認用の記録ID：' + currentSample.recordId
-    : '';
+
+  el('recordMeta').textContent =
+    attempted ? '確認用の記録ID：' + currentSample.recordId : '';
 
   if (attempted && phase === 'review') {
     el('workHint').textContent =
@@ -682,6 +628,7 @@ function beginSession() {
 
   setPhase('ready');
 
+  // 最初の開始操作で起動し、その後の商品では同じ映像を使い続ける。
   if (!janScanner.active) {
     janScanner.userPaused = false;
     janScanner.blocked = false;
@@ -690,24 +637,17 @@ function beginSession() {
 }
 
 function makeRecordId() {
-  if (
-    window.crypto &&
-    typeof window.crypto.randomUUID === 'function'
-  ) {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
     return window.crypto.randomUUID();
   }
 
-  if (
-    window.crypto &&
-    typeof window.crypto.getRandomValues === 'function'
-  ) {
+  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
     const bytes = window.crypto.getRandomValues(new Uint8Array(16));
     bytes[6] = (bytes[6] & 15) | 64;
     bytes[8] = (bytes[8] & 63) | 128;
 
     const hex = Array.from(
-      bytes,
-      b => b.toString(16).padStart(2,'0')
+      bytes,b => b.toString(16).padStart(2,'0')
     ).join('');
 
     return [
@@ -769,11 +709,8 @@ function startSample(code = '') {
 
     const steps = sampleSteps(currentSample,!code);
 
-    if (steps.length) {
-      openWizard(steps,0);
-    } else {
-      previewCurrentSample();
-    }
+    if (steps.length) openWizard(steps,0);
+    else previewCurrentSample();
 
     return true;
   } catch (error) {
@@ -781,7 +718,9 @@ function startSample(code = '') {
       error.message || '入力を開始できませんでした。',
       true
     );
+
     if (currentSample) setPhase('paused');
+
     return false;
   }
 }
@@ -792,11 +731,13 @@ function validateValue(key,raw) {
 
   if (key === 'janCode') {
     const jan = normalizeJanForRecord(value);
+
     if (!jan) {
       throw new Error(
         'JANはチェックデジットが一致する8桁または13桁の数字で入力してください。'
       );
     }
+
     return jan;
   }
 
@@ -849,19 +790,22 @@ function paintWizard() {
   el('wizardHint').textContent = info.hint;
   el('wizardValue').value = currentSample.raw[key] || '';
   el('wizardValue').setAttribute('aria-label',info.label);
+
   el('wizardMinus').disabled =
     key !== 'accumulated' && key !== 'cumulativeOnly';
+
   el('wizardBack').disabled = wizard.index === 0;
+
   el('wizardNext').textContent =
     wizard.index === wizard.steps.length - 1 ? '結果を見る' : '次へ';
 
   wizard.replaceNext = el('wizardValue').value !== '';
+
   wizardError();
 
   el('wizardValue').focus({preventScroll:true});
   el('wizardValue').setSelectionRange(
-    0,
-    el('wizardValue').value.length
+    0,el('wizardValue').value.length
   );
 }
 
@@ -914,26 +858,27 @@ function closeResultDialog() {
 
 function openResultDialog() {
   if (
-    phase !== 'review' ||
-    sending ||
-    !currentSample ||
-    !currentSample.record
+    phase !== 'review' || sending ||
+    !currentSample || !currentSample.record
   ) return;
 
   closeWizard();
 
   const dialog = el('resultDialog');
+
   if (!dialog.open) dialog.showModal();
 
   syncDialogScrollLock();
   renderApp();
 
+  // 最後の入力で押したEnterを、送信ボタンに引き継がない。
   el('resultTitle').tabIndex = -1;
   el('resultTitle').focus({preventScroll:true});
 }
 
 function pauseResultDialog() {
   if (phase !== 'review' || sending || !currentSample) return;
+
   closeResultDialog();
   renderApp();
   el('resumeResult').focus({preventScroll:true});
@@ -941,6 +886,7 @@ function pauseResultDialog() {
 
 function pauseWizard() {
   if (phase !== 'input' || sending) return;
+
   syncWizardDraft();
   closeWizard();
   setPhase('paused');
@@ -962,10 +908,12 @@ function wizardKey(key) {
     value = value.startsWith('-') ? value.slice(1) : '-' + value;
   } else if (/^\d$/.test(key)) {
     if (wizard.replaceNext) value = '';
+
     if (
       value.replace('-','').length >=
       (field === 'janCode' ? 13 : 16)
     ) return;
+
     value += key;
   } else {
     return;
@@ -973,6 +921,7 @@ function wizardKey(key) {
 
   wizard.replaceNext = false;
   el('wizardValue').value = value;
+
   syncWizardDraft();
   wizardError();
 }
@@ -981,6 +930,7 @@ function wizardNext() {
   if (phase !== 'input' || !currentSample || sending) return;
 
   syncWizardDraft();
+
   const key = wizard.steps[wizard.index];
 
   try {
@@ -1046,12 +996,12 @@ function buildRecord(sample,input,model) {
     }
   });
 
+  // JANは数値化せず、先頭の0を保持した13桁の文字列で送る。
   record.janCode = validateValue('janCode',input.janCode);
 
   record.inputMode =
     input.mode === 'separate' ? '内訳' :
-    input.mode === 'combined' ? '合算' :
-    '';
+    input.mode === 'combined' ? '合算' : '';
 
   if (model) {
     record.currentCycle = String(model.current);
@@ -1060,32 +1010,37 @@ function buildRecord(sample,input,model) {
     record.hhtValue = String(model.delta);
   }
 
-  record.calculatedAt = new Date(
-    Date.now() + 9 * 3600000
-  ).toISOString().replace('Z','+09:00');
+  record.calculatedAt =
+    new Date(Date.now() + 9 * 3600000)
+      .toISOString()
+      .replace('Z','+09:00');
 
   record.recordId = sample.recordId;
   record.toolVersion = APP_VERSION;
 
-  record.selectedFields = ['JANコード'].concat(
-    sampleSteps(sample,false,true).map(key => FIELD_INFO[key].label)
-  ).join('、');
+  record.selectedFields =
+    ['JANコード']
+      .concat(
+        sampleSteps(sample,false,true)
+          .map(key => FIELD_INFO[key].label)
+      )
+      .join('、');
 
   return Object.freeze(record);
 }
 
 function renderResult(sample) {
   const model = sample.model;
+
   el('resultValue').className = 'result-value';
 
   if (model) {
     const d = model.delta;
 
     el('resultTitle').textContent = 'HHT入力値';
+
     el('resultValue').className +=
-      d > 0 ? ' plus' :
-      d < 0 ? ' minus' :
-      ' zero';
+      d > 0 ? ' plus' : d < 0 ? ' minus' : ' zero';
 
     el('resultValue').textContent =
       d > 0 ? '増数 ' + formatNumber(d) + ' 個' :
@@ -1121,7 +1076,8 @@ function renderResult(sample) {
     dt.textContent =
       FIELD_INFO[key].label +
       (
-        key === 'recordQuantity' && deriveInventoryTotal(sample.fields)
+        key === 'recordQuantity' &&
+        deriveInventoryTotal(sample.fields)
           ? '〈自動〉'
           : ''
       );
@@ -1168,18 +1124,15 @@ function previewCurrentSample() {
 function getFormConfig() {
   try {
     const url = new URL(GOOGLE_FORM.url);
-    const entries = Object.entries(
-      GOOGLE_FORM.entries
-    ).filter(([,id]) => id !== '');
+
+    const entries = Object.entries(GOOGLE_FORM.entries)
+      .filter(([,id]) => id !== '');
 
     if (
       url.protocol !== 'https:' ||
       url.hostname !== 'docs.google.com' ||
-      !/^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/(?:viewform|formResponse)\/?$/
-        .test(url.pathname)
-    ) {
-      throw new Error();
-    }
+      !/^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/(?:viewform|formResponse)\/?$/.test(url.pathname)
+    ) throw new Error();
 
     if (
       BASE_FORM_KEYS.some(
@@ -1187,14 +1140,13 @@ function getFormConfig() {
       ) ||
       entries.some(([,id]) => !/^entry\.\d+$/.test(id)) ||
       new Set(entries.map(([,id]) => id)).size !== entries.length
-    ) {
-      throw new Error();
-    }
+    ) throw new Error();
 
     url.pathname = url.pathname.replace(
       /\/(?:viewform|formResponse)\/?$/,
       '/formResponse'
     );
+
     url.search = '';
     url.hash = '';
 
@@ -1209,6 +1161,7 @@ function getFormConfig() {
 
 function getSendConfig(sample) {
   const config = getFormConfig();
+
   if (config.state !== 'ready') return config;
 
   if (
@@ -1257,10 +1210,8 @@ function finishSample(message = '',problem = false) {
 
 async function sendSample() {
   if (
-    phase !== 'review' ||
-    sending ||
-    !currentSample ||
-    !currentSample.record ||
+    phase !== 'review' || sending ||
+    !currentSample || !currentSample.record ||
     currentSample.attempted
   ) return 'ignored';
 
@@ -1286,9 +1237,9 @@ async function sendSample() {
     body.set(id,sample.record[key] || '');
   });
 
-  const controls = Array.from(
-    document.querySelectorAll('button,input')
-  ).map(node => [node,node.disabled]);
+  const controls =
+    Array.from(document.querySelectorAll('button,input'))
+      .map(node => [node,node.disabled]);
 
   const controller = new AbortController();
 
@@ -1313,6 +1264,7 @@ async function sendSample() {
       body,
       signal:controller.signal
     });
+
     outcome = 'processed';
   } catch (_) {
     // 到着済みの可能性があるため、自動再送しない。
@@ -1326,12 +1278,14 @@ async function sendSample() {
   }
 
   if (outcome === 'processed') {
+    // no-corsではGoogle側の受付可否を読み取れない。
     finishSample(
       'JAN ' + sample.input.janCode +
       '：送信処理済み。受付結果はGoogleフォームで確認してください。'
     );
   } else {
     setPhase('review');
+
     setSubmissionStatus(
       '送信結果不明。入力は保持しています。Googleフォームの回答を確認してください。',
       true
@@ -1341,15 +1295,13 @@ async function sendSample() {
   return outcome;
 }
 
-el('presetHht').addEventListener(
-  'click',
-  () => setPreset(HHT_FIELDS)
-);
+el('presetHht').addEventListener('click',() => {
+  setPreset(HHT_FIELDS);
+});
 
-el('presetQuantity').addEventListener(
-  'click',
-  () => setPreset(['recordQuantity'])
-);
+el('presetQuantity').addEventListener('click',() => {
+  setPreset(['recordQuantity']);
+});
 
 COLLECTION_FIELDS.forEach(key => {
   el('choose-' + key).addEventListener('change',selectionChanged);
@@ -1398,22 +1350,21 @@ el('resultDialog').addEventListener('cancel',event => {
 
 el('resumeResult').addEventListener('click',openResultDialog);
 
-el('wizardClear').addEventListener(
-  'click',
-  () => wizardKey('clear')
-);
+el('wizardClear').addEventListener('click',() => {
+  wizardKey('clear');
+});
 
 document.querySelectorAll('[data-key]').forEach(button => {
-  button.addEventListener(
-    'click',
-    () => wizardKey(button.dataset.key)
-  );
+  button.addEventListener('click',() => {
+    wizardKey(button.dataset.key);
+  });
 });
 
 el('wizardNext').addEventListener('click',wizardNext);
 
 el('wizardBack').addEventListener('click',() => {
   if (phase !== 'input' || sending || wizard.index < 1) return;
+
   syncWizardDraft();
   wizard.index--;
   paintWizard();
@@ -1422,9 +1373,7 @@ el('wizardBack').addEventListener('click',() => {
 el('inputWizard').addEventListener('keydown',event => {
   if (
     phase !== 'input' ||
-    event.ctrlKey ||
-    event.metaKey ||
-    event.altKey
+    event.ctrlKey || event.metaKey || event.altKey
   ) return;
 
   if (event.key === 'Enter' && event.repeat) {
@@ -1469,6 +1418,7 @@ el('wizardValue').addEventListener('paste',event => {
 
   el('wizardValue').value = value;
   wizard.replaceNext = false;
+
   syncWizardDraft();
   wizardError();
 });
@@ -1490,10 +1440,8 @@ el('resumeInput').addEventListener('click',() => {
 
 el('editSample').addEventListener('click',() => {
   if (
-    phase !== 'review' ||
-    sending ||
-    !currentSample ||
-    currentSample.attempted
+    phase !== 'review' || sending ||
+    !currentSample || currentSample.attempted
   ) return;
 
   currentSample.record = null;
@@ -1509,8 +1457,7 @@ el('editSample').addEventListener('click',() => {
 ['discardDraft','discardSample'].forEach(id => {
   el(id).addEventListener('click',() => {
     if (
-      sending ||
-      !currentSample ||
+      sending || !currentSample ||
       currentSample.attempted ||
       !['paused','review'].includes(phase)
     ) return;
@@ -1534,8 +1481,8 @@ el('nextAfterCheck').addEventListener('click',() => {
 
 el('sendButton').addEventListener('click',sendSample);
 
-
-// カメラ・バーコード読み取り
+// Camera/decoder module.
+// 入力・結果表示中も映像は維持し、読み取りだけを一時停止する。
 
 function normalizeJan(value) {
   return String(value).trim().replace(
@@ -1563,8 +1510,8 @@ function isValidJan(value) {
   return (10 - sum % 10) % 10 === Number(value[value.length - 1]);
 }
 
-// 有効な8桁JANだけを13文字へ統一。
-// 任意の桁不足や誤読をゼロで埋めて受け入れることはしない。
+// 正しい8桁JANだけを13文字へ揃える。
+// 店番や数量にゼロ埋めは行わない。
 function normalizeJanForRecord(value) {
   const code = normalizeJan(value);
   return isValidJan(code) ? code.padStart(13,'0') : '';
@@ -1623,7 +1570,7 @@ function getJanVideoConstraints() {
       constraints.resizeMode = {ideal:'none'};
     }
   } catch (_) {
-    // 任意のカメラ機能。
+    // 任意の機能。
   }
 
   return constraints;
@@ -1674,8 +1621,12 @@ function refreshCameraControls() {
       el(id).hidden = true;
     });
 
-    el('cameraDevice').disabled = !!janScanner.pending || !!sending;
-    el('cameraQuality').disabled = !!janScanner.pending || !!sending;
+    el('cameraDevice').disabled =
+      !!janScanner.pending || !!sending;
+
+    el('cameraQuality').disabled =
+      !!janScanner.pending || !!sending;
+
     el('cameraInfo').textContent =
       'カメラ停止中。設定は次の起動時に反映されます。';
 
@@ -1686,12 +1637,14 @@ function refreshCameraControls() {
 
   const capabilities = control.capabilities;
   const settings = control.settings;
+
   const modes = Array.isArray(capabilities.focusMode)
     ? capabilities.focusMode
     : [];
 
   const canAdjust =
     typeof control.track.applyConstraints === 'function';
+
   const disabled = !!control.busy || !!sending;
 
   el('cameraQuality').value = cameraPreferences.quality;
@@ -1703,10 +1656,17 @@ function refreshCameraControls() {
     !modes.some(
       mode => mode === 'continuous' || mode === 'single-shot'
     );
+
   el('cameraFocus').disabled = disabled;
+
+  el('cameraFocus').textContent =
+    modes.includes('single-shot')
+      ? 'ピントを合わせ直す'
+      : '自動ピントに戻す';
 
   el('cameraTorch').hidden =
     !canAdjust || !janTorchSupported(capabilities);
+
   el('cameraTorch').disabled = disabled;
 
   const torch = settings.torch === undefined
@@ -1720,6 +1680,7 @@ function refreshCameraControls() {
     id,rowId,valueId,range,value,suffix
   ) => {
     const available = canAdjust && janCameraRange(range);
+
     el(rowId).hidden = !available;
     if (!available) return;
 
@@ -1727,6 +1688,7 @@ function refreshCameraControls() {
 
     slider.min = String(range.min);
     slider.max = String(range.max);
+
     slider.step = String(
       Number.isFinite(range.step) && range.step > 0
         ? range.step
@@ -1771,10 +1733,10 @@ function refreshCameraControls() {
   const height = video.videoHeight || settings.height;
 
   const modeNames = {
-    'continuous':'自動ピント',
+    continuous:'自動ピント',
     'single-shot':'1回ピント調整',
-    'manual':'手動ピント',
-    'none':'ピント制御なし'
+    manual:'手動ピント',
+    none:'ピント制御なし'
   };
 
   el('cameraInfo').textContent =
@@ -1784,7 +1746,9 @@ function refreshCameraControls() {
         : '映像の画質を確認中'
     ) +
     ' ／ ' +
-    (modeNames[settings.focusMode] || 'ピント設定は端末側');
+    (modeNames[settings.focusMode] || 'ピント制御はブラウザに非公開') +
+    ' ／ 使用中：' +
+    (control.track.label || '名称を取得できないカメラ');
 }
 
 async function refreshJanCameraDevices(control) {
@@ -1794,11 +1758,11 @@ async function refreshJanCameraDevices(control) {
   ) return;
 
   try {
-    const devices = (
-      await navigator.mediaDevices.enumerateDevices()
-    ).filter(
-      device => device.kind === 'videoinput' && device.deviceId
-    );
+    const devices =
+      (await navigator.mediaDevices.enumerateDevices())
+        .filter(
+          device => device.kind === 'videoinput' && device.deviceId
+        );
 
     if (!isCurrentJanControl(control)) return;
 
@@ -1812,28 +1776,62 @@ async function refreshJanCameraDevices(control) {
 
     devices.forEach((device,index) => {
       const option = document.createElement('option');
+
       option.value = device.deviceId;
       option.textContent = device.label || 'カメラ ' + (index + 1);
+
       select.appendChild(option);
     });
 
     select.value = cameraPreferences.deviceId;
     el('cameraDeviceRow').hidden = devices.length < 2;
   } catch (_) {
-    // カメラ一覧が取得できなくても現在の映像は使い続ける。
+    // 一覧取得に失敗しても現在のカメラは維持する。
   }
 }
 
-async function applyJanCameraChange(patch,successText = '') {
+function cancelJanFocusRestore(control = cameraControls) {
+  if (!control) return;
+
+  clearTimeout(control.focusRestoreTimer);
+  control.focusRestoreTimer = null;
+  control.focusSequence = (control.focusSequence || 0) + 1;
+}
+
+function janSettingMatches(actual,requested) {
+  if (typeof requested === 'number') {
+    return typeof actual === 'number' &&
+      Math.abs(actual - requested) <= 0.05;
+  }
+
+  if (requested && typeof requested === 'object') {
+    return JSON.stringify(actual) === JSON.stringify(requested);
+  }
+
+  return actual === requested;
+}
+
+async function applyJanCameraChange(
+  patch,
+  successText = '',
+  options = {}
+) {
   const control = cameraControls;
 
   if (
     !isCurrentJanControl(control) ||
     typeof control.track.applyConstraints !== 'function' ||
-    sending
+    sending && !options.internal
   ) return false;
 
   const requested = {...patch};
+
+  if (
+    !options.keepFocusSequence &&
+    ('focusMode' in requested || 'focusDistance' in requested)
+  ) {
+    cancelJanFocusRestore(control);
+  }
 
   control.busy++;
   resetJanReading();
@@ -1848,30 +1846,62 @@ async function applyJanCameraChange(patch,successText = '') {
       delete next.focusDistance;
     }
 
-    // 他の調整値や解像度・カメラ指定を失わないようにまとめて適用。
-    await control.track.applyConstraints({
-      ...control.baseConstraints,
-      advanced:[next]
-    });
+    // カメラ選択・解像度・他の調整値を維持する。
+    let advancedFailed = false;
+
+    try {
+      await control.track.applyConstraints({
+        ...control.baseConstraints,
+        advanced:[next]
+      });
+    } catch (_) {
+      advancedFailed = true;
+    }
 
     if (!isCurrentJanControl(control)) return false;
 
-    control.adjustments = next;
     control.settings = readJanTrackSettings(control.track);
 
-    const ignored = Object.keys(requested).some(key => {
-      if (control.settings[key] === undefined) return false;
+    const mismatch = () => Object.keys(requested).some(key =>
+      control.settings[key] !== undefined &&
+      !janSettingMatches(control.settings[key],requested[key])
+    );
 
-      return typeof requested[key] === 'number'
-        ? Math.abs(control.settings[key] - requested[key]) > 0.05
-        : control.settings[key] !== requested[key];
+    // advanced指定が拒否／無視された場合は基本辞書で一度再試行。
+    if (advancedFailed || mismatch()) {
+      try {
+        await control.track.applyConstraints({
+          ...control.baseConstraints,
+          ...next
+        });
+      } catch (error) {
+        if (advancedFailed) throw error;
+      }
+
+      if (!isCurrentJanControl(control)) return false;
+
+      control.settings = readJanTrackSettings(control.track);
+    }
+
+    const ignored = mismatch();
+
+    control.adjustments = {...next};
+
+    Object.keys(next).forEach(key => {
+      if (control.settings[key] !== undefined) {
+        control.adjustments[key] = control.settings[key];
+      }
     });
 
+    if (control.adjustments.focusMode !== 'manual') {
+      delete control.adjustments.focusDistance;
+    }
+
     el('cameraControlStatus').textContent = ignored
-      ? '端末が設定を反映していない項目があります。映像を確認してください。'
+      ? 'この調整を端末が反映していません。別のカメラや撮影距離を試してください。'
       : successText;
 
-    return true;
+    return !ignored;
   }).catch(() => {
     if (isCurrentJanControl(control)) {
       el('cameraControlStatus').textContent =
@@ -1897,7 +1927,7 @@ async function configureJanTrack(track,token,baseConstraints) {
   try {
     capabilities = track.getCapabilities() || {};
   } catch (_) {
-    // この場合は端末側の自動調整に任せる。
+    // 公開されない機能はブラウザ／端末側に任せる。
   }
 
   const control = {
@@ -1908,7 +1938,9 @@ async function configureJanTrack(track,token,baseConstraints) {
     baseConstraints,
     adjustments:{},
     queue:Promise.resolve(),
-    busy:0
+    busy:0,
+    focusSequence:0,
+    focusRestoreTimer:null
   };
 
   cameraControls = control;
@@ -1930,20 +1962,69 @@ async function configureJanTrack(track,token,baseConstraints) {
 
 async function requestJanFocus() {
   const control = cameraControls;
-  if (!isCurrentJanControl(control)) return;
 
-  const modes = control.capabilities.focusMode || [];
-  const mode =
-    modes.includes('continuous') ? 'continuous' :
-    modes.includes('single-shot') ? 'single-shot' :
-    '';
+  if (
+    !isCurrentJanControl(control) ||
+    sending ||
+    control.busy
+  ) return;
 
-  if (mode) {
-    await applyJanCameraChange(
-      {focusMode:mode},
-      '自動ピントの設定を要求しました。映像が鮮明になる距離で合わせてください。'
-    );
+  const modes = Array.isArray(control.capabilities.focusMode)
+    ? control.capabilities.focusMode
+    : [];
+
+  cancelJanFocusRestore(control);
+
+  const sequence = control.focusSequence;
+
+  if (!modes.includes('single-shot')) {
+    if (modes.includes('continuous')) {
+      await applyJanCameraChange(
+        {focusMode:'continuous'},
+        '自動ピントを要求しました。合焦完了はブラウザから取得できません。',
+        {keepFocusSequence:true}
+      );
+    }
+    return;
   }
+
+  const applied = await applyJanCameraChange(
+    {focusMode:'single-shot'},
+    'ピントの合わせ直しを要求しました。',
+    {keepFocusSequence:true}
+  );
+
+  if (
+    !isCurrentJanControl(control) ||
+    control.focusSequence !== sequence ||
+    !modes.includes('continuous')
+  ) return;
+
+  if (!applied) {
+    await applyJanCameraChange(
+      {focusMode:'continuous'},
+      '単発の再調整を確認できなかったため、自動ピントに戻しました。',
+      {keepFocusSequence:true,internal:true}
+    );
+    return;
+  }
+
+  // 700msは合焦完了の保証ではない。
+  // 手動操作が入ったら、この復帰タイマーを取り消す。
+  control.focusRestoreTimer = setTimeout(() => {
+    control.focusRestoreTimer = null;
+
+    if (
+      !isCurrentJanControl(control) ||
+      control.focusSequence !== sequence
+    ) return;
+
+    void applyJanCameraChange(
+      {focusMode:'continuous'},
+      '自動ピントに戻しました。ぼける時は少し離してください。',
+      {keepFocusSequence:true,internal:true}
+    );
+  },700);
 }
 
 async function switchJanCamera() {
@@ -1951,9 +2032,7 @@ async function switchJanCamera() {
 
   cameraPreferences.deviceId = el('cameraDevice').value;
   cameraPreferences.quality =
-    el('cameraQuality').value === 'standard'
-      ? 'standard'
-      : 'high';
+    el('cameraQuality').value === 'standard' ? 'standard' : 'high';
 
   if (janScanner.userPaused && !janScanner.active) return;
 
@@ -1983,10 +2062,19 @@ function updateCameraUI() {
   let state = 'カメラ停止中';
   let hint = janScanner.message;
 
-  placeholder.hidden = live;
+  const engineLabel =
+    typeof getJanDecoderLabel === 'function'
+      ? getJanDecoderLabel(janScanner.decoder)
+      : '準備中';
 
-  el('cameraOptions').hidden =
-    !live && !janScanner.startedAt;
+  el('decoderInfo').textContent =
+    '読取：' +
+    (janScanner.active ? engineLabel : '停止中') +
+    ' ／ ' +
+    APP_VERSION.replace('ordering-sampling-','v');
+
+  placeholder.hidden = live;
+  el('cameraOptions').hidden = !live && !janScanner.startedAt;
 
   el('cameraDevice').disabled =
     !!janScanner.pending ||
@@ -2004,7 +2092,7 @@ function updateCameraUI() {
       !sending &&
       (
         el('cameraOptions').open ||
-        (cameraControls && cameraControls.busy)
+        cameraControls && cameraControls.busy
       )
     ) {
       state = 'カメラ調整中';
@@ -2028,7 +2116,8 @@ function updateCameraUI() {
         sending:'送信処理中です。'
       };
 
-      hint = hint ||
+      hint =
+        hint ||
         pausedHints[phase] ||
         'バーコードの読み取りを待機しています。';
     }
@@ -2041,21 +2130,26 @@ function updateCameraUI() {
       ? 'カメラの許可を確認しています'
       : 'カメラを準備しています';
 
-    hint = hint ||
+    hint =
+      hint ||
       '確認が出たらカメラを許可してください。JANの手入力も利用できます。';
   } else {
     placeholder.textContent = janScanner.blocked
       ? 'カメラを利用できません'
       : 'カメラ停止中';
 
-    hint = hint ||
+    hint =
+      hint ||
       'カメラを起動するか、JANを手入力してください。';
   }
 
   el('cameraState').textContent = state;
 
   const hintNode = el('cameraHint');
-  if (hintNode.textContent !== hint) hintNode.textContent = hint;
+
+  if (hintNode.textContent !== hint) {
+    hintNode.textContent = hint;
+  }
 
   hintNode.classList.toggle('problem',janScanner.problem);
   toggle.disabled = !!sending;
@@ -2063,34 +2157,14 @@ function updateCameraUI() {
   const label =
     waiting ? 'カメラ停止' :
     janScanner.blocked ? 'カメラ再試行' :
-    janScanner.userPaused && janScanner.startedAt > 0
-      ? 'カメラ再開'
-      : 'カメラ起動';
+    janScanner.userPaused && janScanner.startedAt > 0 ? 'カメラ再開' :
+    'カメラ起動';
 
-  if (toggle.textContent !== label) toggle.textContent = label;
+  if (toggle.textContent !== label) {
+    toggle.textContent = label;
+  }
+
   toggle.setAttribute('aria-label',label);
-}
-
-function disposeJanDecoder(decoder) {
-  if (!decoder || decoder.disposed) return;
-  decoder.disposed = true;
-
-  if (decoder.compatibility) {
-    disposeJanDecoder(decoder.compatibility);
-    decoder.compatibility = null;
-  }
-
-  if (decoder.reader) {
-    try {
-      decoder.reader.reset();
-    } catch (_) {}
-  }
-
-  if (decoder.labelReader) {
-    try {
-      decoder.labelReader.reset();
-    } catch (_) {}
-  }
 }
 
 function clearJanStreak() {
@@ -2124,6 +2198,7 @@ function scheduleJanFrame(token,epoch,delay = 180) {
 }
 
 function resetJanReading() {
+  // ダイアログやカメラ設定の変更前に開始した処理結果を無効化する。
   janScanner.decodeEpoch++;
 
   clearTimeout(janScanner.timer);
@@ -2154,7 +2229,7 @@ function resetJanReading() {
 }
 
 function stopJanCamera(message = '',problem = false) {
-  // 未解決のカメラ許可要求は保持し、要求の重複を防ぐ。
+  // getUserMediaの許可確認中はPromiseを保持し、重複要求を避ける。
   janScanner.generation++;
   janScanner.decodeEpoch++;
   janScanner.active = false;
@@ -2168,10 +2243,10 @@ function stopJanCamera(message = '',problem = false) {
   janScanner.scanHint = '';
 
   const stream = janScanner.stream;
-
   janScanner.stream = null;
-  cameraControls = null;
 
+  cancelJanFocusRestore(cameraControls);
+  cameraControls = null;
   refreshCameraControls();
 
   if (stream) {
@@ -2184,6 +2259,7 @@ function stopJanCamera(message = '',problem = false) {
 
   disposeJanDecoder(janScanner.decoder);
   janScanner.decoder = null;
+
   janScanner.message = message;
   janScanner.problem = problem;
 
@@ -2226,21 +2302,21 @@ function loadZxing() {
       'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
 
     script.async = true;
+
     script.integrity =
       'sha384-BzBxP10ZE72aitqj5UMmUsbKFliP/DZqA8Wq+BNNhlIJDGoEd1tpkMYXOg9+n6sB';
 
     script.crossOrigin = 'anonymous';
     script.referrerPolicy = 'no-referrer';
 
-    script.onload = () => {
-      finish(
-        window.ZXing && window.ZXing.MultiFormatReader
-          ? null
-          : {name:'JanLibraryError'}
-      );
-    };
+    script.onload = () => finish(
+      window.ZXing && window.ZXing.MultiFormatReader
+        ? null
+        : {name:'JanLibraryError'}
+    );
 
     script.onerror = () => finish({name:'JanLibraryError'});
+
     document.head.appendChild(script);
   }).catch(error => {
     zxingLoadPromise = null;
@@ -2251,46 +2327,568 @@ function loadZxing() {
 }
 
 const JAN_NATIVE_FORMATS = [
-  'ean_13',
-  'ean_8',
-  'code_128',
-  'code_39',
-  'itf'
+  'ean_13','ean_8','code_128','code_39','itf'
 ];
 
+const JAN_WASM_FORMATS = [
+  'EAN13','EAN8','Code128','Code39','Code39Std','Code39Ext','ITF'
+];
+
+// Worker内で動く。
+// ダウンロードするのは公開ライブラリだけ。
+// カメラ画像をサーバーへ送信しない。
+function janWasmWorkerMain() {
+  const base =
+    'https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.6/dist/';
+
+  const scriptURL = base + 'iife/reader/index.js';
+  const wasmURL = base + 'reader/zxing_reader.wasm';
+
+  const options = {
+    formats:['EAN13','EAN8','Code128','Code39','ITF'],
+    tryHarder:true,
+    tryRotate:true,
+    tryInvert:true,
+    tryDownscale:true,
+    downscaleFactor:2,
+    downscaleThreshold:600,
+    minLineCount:2,
+    maxNumberOfSymbols:4,
+    returnErrors:false,
+    isPure:false,
+    textMode:'Plain'
+  };
+
+  let variant = 0;
+
+  function transformedImage(input,mode) {
+    const pixels = new Uint8ClampedArray(input.data.length);
+    const width = input.width;
+    const height = input.height;
+
+    for (let y = 0; y < height; y++) {
+      const start = y * width * 4;
+      const end = start + width * 4;
+
+      let low = 255;
+      let high = 0;
+
+      for (let i = start; i < end; i += 4) {
+        const value = Math.round(
+          (
+            input.data[i] +
+            2 * input.data[i + 1] +
+            input.data[i + 2]
+          ) / 4
+        );
+
+        pixels[i] = value;
+        low = Math.min(low,value);
+        high = Math.max(high,value);
+      }
+
+      // 平坦なノイズを増幅しすぎない。
+      const expand =
+        mode !== 1 &&
+        high - low >= 12 &&
+        high - low < 220;
+
+      for (let i = start; i < end; i += 4) {
+        let value = expand
+          ? Math.round((pixels[i] - low) * 255 / (high - low))
+          : pixels[i];
+
+        if (mode !== 0) value = 255 - value;
+
+        pixels[i] = pixels[i + 1] = pixels[i + 2] = value;
+        pixels[i + 3] = 255;
+      }
+    }
+
+    return {width,height,data:pixels};
+  }
+
+  const ready = (async () => {
+    const [scriptResponse,wasmResponse] = await Promise.all([
+      fetch(scriptURL,{
+        credentials:'omit',
+        referrerPolicy:'no-referrer',
+        integrity:'sha384-WftrM7hFN3CZH1pg8fvonijN1mDx8lh1U3L267n+snjsk/o7oBdEbUx5R8P3uw9S'
+      }),
+      fetch(wasmURL,{
+        credentials:'omit',
+        referrerPolicy:'no-referrer',
+        integrity:'sha384-nK2pHJVglp+a6HfEzYu3Das+oIISIChcnPvLUzhPoPHhi8NaJzy9dzcwIdK/dC0I'
+      })
+    ]);
+
+    if (!scriptResponse.ok || !wasmResponse.ok) {
+      throw new Error('Library download failed');
+    }
+
+    const [script,wasmBinary] = await Promise.all([
+      scriptResponse.text(),
+      wasmResponse.arrayBuffer()
+    ]);
+
+    const scriptBlob = URL.createObjectURL(
+      new Blob([script],{type:'text/javascript'})
+    );
+
+    try {
+      importScripts(scriptBlob);
+    } finally {
+      URL.revokeObjectURL(scriptBlob);
+    }
+
+    if (
+      !self.ZXingWASM ||
+      self.ZXingWASM.ZXING_WASM_VERSION !== '3.1.6'
+    ) {
+      throw new Error('Library mismatch');
+    }
+
+    await self.ZXingWASM.prepareZXingModule({
+      fireImmediately:true,
+      overrides:{
+        wasmBinary,
+        locateFile:() => wasmURL
+      }
+    });
+  })();
+
+  ready.then(
+    () => self.postMessage({type:'ready'}),
+    () => self.postMessage({type:'failed'})
+  );
+
+  self.onmessage = async event => {
+    const data = event.data;
+
+    if (!data || data.type !== 'read') return;
+
+    try {
+      await ready;
+
+      const input = {
+        width:data.width,
+        height:data.height,
+        data:new Uint8ClampedArray(data.buffer)
+      };
+
+      let found = await self.ZXingWASM.readBarcodes(input,options);
+
+      // 追加処理は1フレームにつき最大1回。
+      // 濃淡補正・白黒反転・両方を順に試す。
+      if (!found.length) {
+        found = await self.ZXingWASM.readBarcodes(
+          transformedImage(input,variant),
+          options
+        );
+
+        if (!found.length) variant = (variant + 1) % 3;
+      }
+
+      self.postMessage({
+        type:'result',
+        id:data.id,
+        results:found.map(item => ({
+          text:item.text,
+          format:item.format,
+          isValid:item.isValid,
+          lineCount:item.lineCount
+        }))
+      });
+    } catch (_) {
+      self.postMessage({type:'error',id:data.id});
+    }
+  };
+}
+
+function createJanWasmClient() {
+  if (
+    typeof Worker !== 'function' ||
+    typeof WebAssembly !== 'object'
+  ) {
+    throw {name:'JanWasmUnavailable'};
+  }
+
+  let worker;
+  let objectURL;
+  let closed = false;
+  let initialized = false;
+  let readyResolve;
+  let readyReject;
+  let nextId = 0;
+
+  const requests = new Map();
+
+  const ready = new Promise((resolve,reject) => {
+    readyResolve = resolve;
+    readyReject = reject;
+  });
+
+  const initTimer = setTimeout(
+    () => close({name:'JanWasmTimeout'}),
+    15000
+  );
+
+  function close(error = {name:'JanWasmClosed'}) {
+    if (closed) return;
+
+    closed = true;
+
+    clearTimeout(initTimer);
+
+    if (worker) worker.terminate();
+    if (objectURL) URL.revokeObjectURL(objectURL);
+    if (!initialized) readyReject(error);
+
+    for (const request of requests.values()) {
+      clearTimeout(request.timer);
+      request.reject(error);
+    }
+
+    requests.clear();
+  }
+
+  try {
+    objectURL = URL.createObjectURL(
+      new Blob(
+        ['(' + janWasmWorkerMain.toString() + ')();'],
+        {type:'text/javascript'}
+      )
+    );
+
+    worker = new Worker(objectURL);
+
+    worker.onmessage = event => {
+      if (closed) return;
+
+      const data = event.data || {};
+
+      if (data.type === 'ready') {
+        initialized = true;
+        clearTimeout(initTimer);
+        readyResolve();
+        return;
+      }
+
+      if (data.type === 'failed') {
+        close({name:'JanWasmLoadError'});
+        return;
+      }
+
+      const request = requests.get(data.id);
+
+      if (!request) return;
+
+      requests.delete(data.id);
+      clearTimeout(request.timer);
+
+      if (data.type === 'result') {
+        request.resolve(data.results || []);
+      } else {
+        request.reject({name:'JanWasmDecodeError'});
+      }
+    };
+
+    worker.onerror = () => close({name:'JanWasmWorkerError'});
+    worker.onmessageerror = () => close({name:'JanWasmMessageError'});
+  } catch (_) {
+    close({name:'JanWasmUnavailable'});
+  }
+
+  return {
+    ready,
+    close,
+
+    async read(image) {
+      await ready;
+
+      if (closed) throw {name:'JanWasmClosed'};
+
+      const id = ++nextId;
+
+      return new Promise((resolve,reject) => {
+        const timer = setTimeout(
+          () => close({name:'JanWasmTimeout'}),
+          5000
+        );
+
+        requests.set(id,{resolve,reject,timer});
+
+        try {
+          let buffer = image.data.buffer;
+
+          try {
+            worker.postMessage({
+              type:'read',
+              id,
+              width:image.width,
+              height:image.height,
+              buffer
+            },[buffer]);
+          } catch (error) {
+            // 転送不可のバッファに限り、一度コピーして再試行。
+            if (!error || error.name !== 'DataCloneError') {
+              throw error;
+            }
+
+            buffer = new Uint8ClampedArray(image.data).buffer;
+
+            worker.postMessage({
+              type:'read',
+              id,
+              width:image.width,
+              height:image.height,
+              buffer
+            },[buffer]);
+          }
+        } catch (_) {
+          requests.delete(id);
+          clearTimeout(timer);
+          reject({name:'JanWasmMessageError'});
+        }
+      });
+    }
+  };
+}
+
+function getJanDecoderLabel(decoder) {
+  if (!decoder) return '準備中';
+  if (decoder.kind === 'zxing') return '標準（互換）';
+  if (decoder.wasmReady) return '高精度';
+
+  return decoder.wasmFailed
+    ? '標準（互換）'
+    : '高精度準備中';
+}
+
+function notifyJanDecoderChanged(decoder) {
+  if (
+    !decoder.disposed &&
+    typeof updateCameraUI === 'function'
+  ) {
+    updateCameraUI();
+  }
+}
+
+function ensureJanLegacy(decoder) {
+  if (decoder.disposed) return Promise.resolve(null);
+  if (decoder.legacy) return Promise.resolve(decoder.legacy);
+
+  if (!decoder.legacyPromise) {
+    decoder.legacyPromise =
+      createLegacyJanDecoder().then(legacy => {
+        if (decoder.disposed) {
+          disposeJanDecoder(legacy);
+          return null;
+        }
+
+        decoder.legacy = legacy;
+        notifyJanDecoderChanged(decoder);
+
+        return legacy;
+      });
+  }
+
+  return decoder.legacyPromise;
+}
+
 async function createJanDecoder(preferNative = true) {
+  const decoder = {
+    kind:'hybrid',
+    disposed:false,
+    detector:null,
+    formats:[],
+    wasm:null,
+    wasmPromise:null,
+    wasmReady:false,
+    wasmFailed:false,
+    legacy:null,
+    legacyPromise:null,
+    diagnostic:'',
+    lastReadStrong:false
+  };
+
   if (preferNative && 'BarcodeDetector' in window) {
     try {
       const supported =
         await window.BarcodeDetector.getSupportedFormats();
 
-      if (
-        ['ean_13','ean_8'].every(
-          format => supported.includes(format)
-        )
-      ) {
-        const formats = JAN_NATIVE_FORMATS.filter(
-          format => supported.includes(format)
-        );
+      decoder.formats =
+        JAN_NATIVE_FORMATS.filter(format => supported.includes(format));
 
-        return {
-          kind:'native',
-          detector:new window.BarcodeDetector({formats}),
-          formats,
-          disposed:false,
-          misses:0,
-          compatibility:null,
-          compatibilityPromise:null,
-          compatibilityAttempted:false,
-          compatibilityFailed:false,
-          diagnostic:''
-        };
+      if (decoder.formats.length) {
+        decoder.detector =
+          new window.BarcodeDetector({formats:decoder.formats});
       }
     } catch (_) {
-      // 互換デコーダーへ切り替える。
+      // ネイティブ機能が失敗してもWASMを使用できる。
     }
   }
 
+  try {
+    decoder.wasm = createJanWasmClient();
+
+    decoder.wasmPromise = decoder.wasm.ready.then(() => {
+      if (!decoder.disposed) {
+        decoder.wasmReady = true;
+        notifyJanDecoderChanged(decoder);
+      }
+    }).catch(async () => {
+      if (decoder.disposed) return;
+
+      decoder.wasmFailed = true;
+      notifyJanDecoderChanged(decoder);
+
+      try {
+        await ensureJanLegacy(decoder);
+      } catch (_) {
+        decoder.legacyFailed = true;
+      }
+    });
+  } catch (_) {
+    decoder.wasmFailed = true;
+
+    decoder.wasmPromise = ensureJanLegacy(decoder).catch(() => {
+      decoder.legacyFailed = true;
+    });
+  }
+
+  // 準備中でも所有者へ返し、停止時にWorkerを確実に終了できるようにする。
+  return decoder;
+}
+
+function disposeJanDecoder(decoder) {
+  if (!decoder || decoder.disposed) return;
+
+  decoder.disposed = true;
+
+  if (decoder.wasm) decoder.wasm.close();
+  if (decoder.legacy) disposeJanDecoder(decoder.legacy);
+  if (decoder.compatibility) disposeJanDecoder(decoder.compatibility);
+
+  for (const reader of [decoder.reader,decoder.labelReader]) {
+    if (reader) {
+      try {
+        reader.reset();
+      } catch (_) {
+        // 解放済み。
+      }
+    }
+  }
+}
+
+async function decodeJanCanvas(decoder,canvas) {
+  if (!decoder || decoder.disposed) return [];
+
+  decoder.lastReadStrong = false;
+  decoder.diagnostic = '';
+
+  if (decoder.kind === 'zxing') {
+    return decodeLegacyJanCanvas(decoder,canvas);
+  }
+
+  if (decoder.detector) {
+    try {
+      const found = await decoder.detector.detect(canvas);
+
+      if (decoder.disposed) return [];
+
+      const codes = collectDecodedJan(
+        decoder,
+        found
+          .filter(item => decoder.formats.includes(item.format))
+          .map(item => item.rawValue)
+      );
+
+      if (codes.length) return codes;
+    } catch (_) {
+      decoder.detector = null;
+    }
+  }
+
+  if (decoder.wasmReady) {
+    try {
+      const context = canvas.getContext(
+        '2d',
+        {willReadFrequently:true}
+      );
+
+      if (!context) throw {name:'JanCaptureError'};
+
+      const found = await decoder.wasm.read(
+        context.getImageData(0,0,canvas.width,canvas.height)
+      );
+
+      if (decoder.disposed) return [];
+
+      const accepted = found.filter(item =>
+        item.isValid === true &&
+        JAN_WASM_FORMATS.includes(item.format) &&
+        Number.isFinite(item.lineCount) &&
+        item.lineCount >= 2
+      );
+
+      const codes = collectDecodedJan(
+        decoder,
+        accepted.map(item => item.text)
+      );
+
+      decoder.lastReadStrong = codes.length === 1;
+
+      return codes;
+    } catch (_) {
+      if (decoder.disposed) return [];
+
+      decoder.wasmReady = false;
+      decoder.wasmFailed = true;
+      decoder.wasm.close();
+
+      notifyJanDecoderChanged(decoder);
+    }
+  }
+
+  if (decoder.wasmFailed) {
+    if (decoder.detector && !decoder.legacy) {
+      // 補助ライブラリの準備中もネイティブ読取を止めない。
+      ensureJanLegacy(decoder).catch(() => {
+        if (!decoder.disposed) decoder.legacyFailed = true;
+      });
+
+      if (!decoder.diagnostic && !decoder.legacyFailed) {
+        decoder.diagnostic =
+          '補助の読み取りを準備しています。カメラはそのまま使えます。';
+      }
+
+      return [];
+    }
+
+    try {
+      const legacy = await ensureJanLegacy(decoder);
+
+      if (decoder.disposed || !legacy) return [];
+
+      const codes = await decodeLegacyJanCanvas(legacy,canvas);
+
+      decoder.diagnostic =
+        legacy.diagnostic || decoder.diagnostic;
+
+      return codes;
+    } catch (_) {
+      if (!decoder.detector) throw {name:'JanLibraryError'};
+    }
+  } else if (!decoder.diagnostic) {
+    decoder.diagnostic =
+      '高精度の読み取りを準備しています。映像はそのまま使えます。';
+  }
+
+  return [];
+}
+
+async function createLegacyJanDecoder() {
   const Z = await loadZxing();
 
   const eanFormats = [
@@ -2313,6 +2911,7 @@ async function createJanDecoder(preferNative = true) {
 
     const reader = new Z.MultiFormatReader();
     reader.setHints(hints);
+
     return reader;
   };
 
@@ -2328,37 +2927,13 @@ async function createJanDecoder(preferNative = true) {
   };
 }
 
-function prepareJanCompatibility(decoder) {
-  if (decoder.disposed || decoder.compatibilityAttempted) return;
-
-  decoder.compatibilityAttempted = true;
-
-  decoder.compatibilityPromise = createJanDecoder(false)
-    .then(fallback => {
-      if (decoder.disposed) {
-        disposeJanDecoder(fallback);
-        return;
-      }
-      decoder.compatibility = fallback;
-    })
-    .catch(() => {
-      if (!decoder.disposed) {
-        decoder.compatibilityFailed = true;
-      }
-    })
-    .finally(() => {
-      decoder.compatibilityPromise = null;
-    });
-}
-
 function collectDecodedJan(decoder,values) {
   const accepted = [];
 
   for (const value of values) {
     const code = normalizeJan(value);
 
-    // プライスカードに独自の商品番号が入っている場合もある。
-    // JANの部分切り出しや桁数の推測は行わない。
+    // カード独自の管理番号からJANを推測して切り出さない。
     if (isValidJan(code)) {
       accepted.push(code);
     } else {
@@ -2396,8 +2971,9 @@ function janVariantSource(Z,source,variant) {
         const originalWidth = source.getWidth();
 
         for (let x = 0; x < width; x++) {
-          row[x] =
-            pixels[x * originalWidth + originalWidth - 1 - y];
+          row[x] = pixels[
+            x * originalWidth + originalWidth - 1 - y
+          ];
         }
       } else {
         row = source.getRow(y,row);
@@ -2410,7 +2986,6 @@ function janVariantSource(Z,source,variant) {
           high = Math.max(high,row[x]);
         }
 
-        // ほぼ一様な画像のノイズを過剰に強調しない。
         if (high - low >= 12 && high - low < 220) {
           const scale = 255 / (high - low);
 
@@ -2464,62 +3039,18 @@ function tryJanZxing(decoder,reader,source) {
       error instanceof Z.NotFoundException ||
       error instanceof Z.ChecksumException ||
       error instanceof Z.FormatException
-    ) {
-      return [];
-    }
+    ) return [];
+
     throw error;
   } finally {
     reader.reset();
   }
 }
 
-async function decodeJanCanvas(decoder,canvas) {
+async function decodeLegacyJanCanvas(decoder,canvas) {
   if (!decoder || decoder.disposed) return [];
 
   decoder.diagnostic = '';
-
-  if (decoder.kind === 'native') {
-    const found = await decoder.detector.detect(canvas);
-    if (decoder.disposed) return [];
-
-    const codes = collectDecodedJan(
-      decoder,
-      found.filter(
-        item => decoder.formats.includes(item.format)
-      ).map(item => item.rawValue)
-    );
-
-    if (codes.length) {
-      decoder.misses = 0;
-      return codes;
-    }
-
-    decoder.misses = Math.min(4,decoder.misses + 1);
-
-    if (decoder.misses >= 4) {
-      prepareJanCompatibility(decoder);
-    }
-
-    if (decoder.compatibility) {
-      try {
-        const compatible = await decodeJanCanvas(
-          decoder.compatibility,
-          canvas
-        );
-
-        decoder.diagnostic =
-          decoder.compatibility.diagnostic || decoder.diagnostic;
-
-        return compatible;
-      } catch (_) {
-        disposeJanDecoder(decoder.compatibility);
-        decoder.compatibility = null;
-        decoder.compatibilityFailed = true;
-      }
-    }
-
-    return [];
-  }
 
   const {Z} = decoder;
 
@@ -2532,21 +3063,16 @@ async function decodeJanCanvas(decoder,canvas) {
     canvas.height
   );
 
-  // 先にEANを探し、別の番号を持つラベルに隠されにくくする。
   const ean = tryJanZxing(decoder,decoder.reader,source);
   if (ean.length) return ean;
 
-  // 追加の解析は1フレームにつき1回。
-  // 成功した方法は次フレームでも使い、2回確認につなげる。
   const extra = tryJanZxing(
     decoder,
     decoder.labelReader,
     janVariantSource(Z,source,decoder.variant)
   );
 
-  if (!extra.length) {
-    decoder.variant = (decoder.variant + 1) % 5;
-  }
+  if (!extra.length) decoder.variant = (decoder.variant + 1) % 5;
 
   return extra;
 }
@@ -2564,15 +3090,18 @@ function captureJanFrame() {
   const vw = video.videoWidth;
   const vh = video.videoHeight;
 
-  // object-fit:coverで見えている範囲と一致させる。
-  // 赤い線は映像とは別要素なので解析画像に入らない。
+  // object-fit:coverで見えている範囲と同じ中央領域を取得。
+  // 赤線はDOM要素なので読み取り画像には混入しない。
   const sw = Math.min(vw,vh * ratio);
   const sh = sw / ratio;
+
   const sx = (vw - sw) / 2;
   const sy = (vh - sh) / 2;
 
-  // 元映像の画素を可能な限り残す。低解像度映像の拡大はしない。
+  // 4K映像を無条件に1920へ縮小しない。
+  // 元映像より拡大して画素数だけ増やす処理も行わない。
   const scale = Math.min(1,3840 / sw,2160 / sh);
+
   const cw = Math.max(1,Math.floor(sw * scale));
   const ch = Math.max(1,Math.floor(sh * scale));
 
@@ -2595,6 +3124,7 @@ function captureJanFrame() {
 async function readJanFrame(token,epoch) {
   if (!canReadJan(token,epoch)) return;
 
+  // 同じカメラ世代で読み取り処理を重ねない。
   if (
     janScanner.readingTask &&
     janScanner.readingTask.generation === token
@@ -2619,6 +3149,7 @@ async function readJanFrame(token,epoch) {
       janScanner.lastFrameAt = Date.now();
 
       const canvas = captureJanFrame();
+
       let decoder = janScanner.decoder;
       let codes;
 
@@ -2664,14 +3195,19 @@ async function readJanFrame(token,epoch) {
 
         janScanner.streak =
           code === janScanner.previousCode &&
-          now - janScanner.previousAt < 4000
+          now - janScanner.previousAt <= 2500
             ? janScanner.streak + 1
             : 1;
 
         janScanner.previousCode = code;
         janScanner.previousAt = now;
 
-        if (janScanner.streak >= 2) {
+        // WASMが複数走査線で確認した結果は、この画像で承認。
+        // ネイティブ・互換読取は短時間内の2回一致で承認。
+        if (
+          decoder.lastReadStrong === true ||
+          janScanner.streak >= 2
+        ) {
           clearJanStreak();
 
           if (
@@ -2683,11 +3219,19 @@ async function readJanFrame(token,epoch) {
           }
         }
       } else {
-        clearJanStreak();
+        // 途中の空振りだけで直前の有効JANを捨てない。
+        // 複数JAN・時間切れ・画面遷移では無効化する。
+        if (
+          unique.length > 1 ||
+          now - janScanner.previousAt > 2500
+        ) {
+          clearJanStreak();
+        }
 
-        janScanner.scanHint = unique.length > 1
-          ? 'バーコードを1つだけ枠内に入れてください。'
-          : (decoder.diagnostic || '');
+        janScanner.scanHint =
+          unique.length > 1
+            ? 'バーコードを1つだけ枠内に入れてください。'
+            : decoder.diagnostic || '';
       }
 
       updateCameraUI();
@@ -2767,7 +3311,7 @@ function mayRestartJanCamera() {
 
 async function startJanCamera(manual = false) {
   if (
-    (manual && sending) ||
+    manual && sending ||
     document.hidden ||
     janScanner.userPaused ||
     janScanner.active
@@ -2782,9 +3326,11 @@ async function startJanCamera(manual = false) {
 
   if (janScanner.pending) {
     janScanner.restartRequested = true;
+
     setJanStatus(
       '先に開いたカメラの許可確認を待っています。JANの手入力も利用できます。'
     );
+
     return;
   }
 
@@ -2864,6 +3410,7 @@ async function startJanCamera(manual = false) {
           janScanner.active
         ) {
           janScanner.blocked = true;
+
           stopJanCamera(
             'カメラが停止しました。「カメラ再試行」で再開できます。',
             true
@@ -2962,12 +3509,10 @@ function toggleJanCamera() {
   if (
     janScanner.active ||
     janScanner.restartRequested ||
-    (janScanner.pending && !janScanner.userPaused)
+    janScanner.pending && !janScanner.userPaused
   ) {
     janScanner.userPaused = true;
-    stopJanCamera(
-      'カメラを停止しました。入力は続けられます。'
-    );
+    stopJanCamera('カメラを停止しました。入力は続けられます。');
   } else {
     janScanner.userPaused = false;
     janScanner.blocked = false;
@@ -2982,10 +3527,7 @@ el('cameraOptions').addEventListener('toggle',() => {
   resetJanReading();
 });
 
-el('janVideo').addEventListener(
-  'resize',
-  refreshCameraControls
-);
+el('janVideo').addEventListener('resize',refreshCameraControls);
 
 el('cameraDevice').addEventListener('change',() => {
   void switchJanCamera();
@@ -3053,9 +3595,7 @@ el('cameraTorch').addEventListener('click',() => {
 
 document.addEventListener('visibilitychange',() => {
   if (document.hidden) {
-    stopJanCamera(
-      '画面を離れたためカメラを停止しました。'
-    );
+    stopJanCamera('画面を離れたためカメラを停止しました。');
   } else if (
     !janScanner.userPaused &&
     !janScanner.blocked
