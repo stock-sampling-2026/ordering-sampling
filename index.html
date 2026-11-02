@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>サンプリング入力</title>
+
+  <style>
+    :root {
+      --blue:#075cb5;
+      --navy:#18446f;
+      --ink:#243547;
+      --muted:#5a6b7d;
+      --line:#dce4ed;
+      --bg:#f3f6fa;
+      --red:#c33743;
+      --green:#217448;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      padding:
+        max(6px,env(safe-area-inset-top))
+        max(6px,env(safe-area-inset-right))
+        max(6px,env(safe-area-inset-bottom))
+        max(6px,env(safe-area-inset-left));
+      background:var(--bg);
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    button,input { font:inherit; }
+    button { cursor:pointer; touch-action:manipulation; }
+    button:disabled { cursor:default; opacity:.45; }
+
+    input {
+      display:block;
+      min-width:0;
+      width:100%;
+      height:36px;
+      padding:5px 8px;
+      border:1px solid #b8c6d5;
+      border-radius:5px;
+      color:var(--ink);
+      background:#fff;
+      font-size:16px;
+      line-height:1.25;
+    }
+
+    input:focus,button:focus-visible {
+      outline:2px solid #a9cef5;
+      outline-offset:1px;
+      border-color:var(--blue);
+    }
+
+    input[aria-invalid="true"] { border:2px solid var(--red); }
+
+    label {
+      display:block;
+      margin:0 0 2px;
+      font-size:11px;
+      font-weight:650;
+      line-height:1.35;
+    }
+
+    [hidden] { display:none !important; }
+
+    .sr-only {
+      position:absolute;
+      width:1px;
+      height:1px;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+      padding:0;
+    }
+
+    .shell { width:100%; max-width:460px; margin:0 auto; }
+    .panel { padding:6px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .group { margin-bottom:4px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+    .identity { display:grid; grid-template-columns:minmax(74px,.72fr) minmax(0,2fr); gap:6px; }
+    .minor { font-weight:400; color:var(--muted); font-size:10px; }
+
+    .camera-panel {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 76px;
+      gap:6px;
+      margin-bottom:6px;
+    }
+
+    .camera-viewport {
+      position:relative;
+      width:100%;
+      height:80px;
+      overflow:hidden;
+      border:1px solid #466787;
+      border-radius:5px;
+      background:#152230;
+      isolation:isolate;
+    }
+
+    .camera-viewport video {
+      position:absolute;
+      inset:0;
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center;
+      z-index:0;
+    }
+
+    .camera-line {
+      position:absolute;
+      top:50%;
+      left:3%;
+      right:3%;
+      height:1px;
+      transform:translateY(-50%);
+      background:#ff3545;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .camera-placeholder {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      margin:0;
+      padding:0 6px 6px;
+      background:#152230;
+      color:#d9e4f1;
+      font-size:10px;
+      text-align:center;
+      z-index:1;
+    }
+
+    .camera-state {
+      position:absolute;
+      top:4px;
+      left:5px;
+      padding:1px 4px;
+      border-radius:3px;
+      background:rgba(0,0,0,.6);
+      color:#fff;
+      font-size:10px;
+      z-index:3;
+      pointer-events:none;
+    }
+
+    .camera-tools { display:flex; flex-direction:column; gap:4px; }
+
+    .btn {
+      min-height:40px;
+      padding:6px 8px;
+      border:1px solid transparent;
+      border-radius:5px;
+      font-weight:700;
+      line-height:1.25;
+    }
+
+    .camera-tools .btn {
+      min-height:38px;
+      height:38px;
+      padding:6px 2px;
+      font-size:11px;
+    }
+
+    .camera-button { background:#e6f0fb; color:var(--blue); border-color:#bdd2e8; }
+    .camera-stop { background:#fff; border-color:#cad7e4; color:var(--ink); }
+
+    .jan-status {
+      margin:0 0 5px;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.4;
+      overflow-wrap:anywhere;
+    }
+
+    .jan-status:empty { display:none; }
+    .jan-status.problem { color:#a42b37; }
+
+    .demand label { color:var(--blue); }
+    .demand input { border-color:#7baadd; background:#f5f9ff; font-weight:700; }
+
+    .label-row {
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:4px;
+    }
+
+    .label-row .minor { white-space:nowrap; }
+
+    .sum-heading {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:4px;
+      min-height:28px;
+    }
+
+    .field-title { margin:0; font-size:11px; font-weight:650; }
+
+    .mode {
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin:0;
+      padding:0;
+      border:0;
+      flex-shrink:0;
+    }
+
+    .mode label {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      margin:0;
+      min-height:28px;
+      min-width:44px;
+      font-size:11px;
+      font-weight:400;
+      cursor:pointer;
+    }
+
+    .mode input {
+      width:14px;
+      min-width:14px;
+      height:14px;
+      margin:0;
+      padding:0;
+      accent-color:var(--blue);
+    }
+
+    .actions { display:flex; gap:6px; margin-top:7px; }
+    .primary { flex:1; background:var(--blue); color:#fff; font-size:15px; }
+    .primary:hover { background:#034e9d; }
+    .reset { flex:0 0 76px; background:var(--red); color:#fff; font-size:12px; }
+
+    .error {
+      margin:6px 0 0;
+      padding:6px 8px;
+      border:1px solid #e9aeb4;
+      border-radius:5px;
+      color:#9f2632;
+      background:#fff1f1;
+      font-size:11px;
+      overflow-wrap:anywhere;
+    }
+
+    .result-box {
+      margin-top:6px;
+      padding:5px 8px;
+      border:1px solid #d3e5f7;
+      border-radius:6px;
+      background:#edf5fe;
+    }
+
+    .result-row {
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:6px;
+    }
+
+    .result-box h2 {
+      margin:0;
+      color:var(--navy);
+      font-size:11px;
+      font-weight:600;
+    }
+
+    .result-value {
+      margin:0;
+      font-size:23px;
+      font-weight:750;
+      line-height:1.3;
+      text-align:right;
+      overflow-wrap:anywhere;
+    }
+
+    .result-value.plus { color:var(--red); }
+    .result-value.minus { color:var(--blue); }
+    .result-value.zero { color:var(--green); }
+    .result-value.waiting { color:#71859b; font-size:20px; }
+
+    .result-explanation {
+      margin:1px 0 0;
+      min-height:14px;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.4;
+      overflow-wrap:anywhere;
+    }
+
+    .submission-status {
+      margin:4px 1px 0;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.4;
+      overflow-wrap:anywhere;
+    }
+
+    .submission-status.problem { color:#a42b37; }
+    .submission-status.success { color:var(--green); }
+
+    @media(max-width:350px) {
+      .panel { padding:6px; }
+      .camera-panel { grid-template-columns:minmax(0,1fr) 70px; }
+      .label-row .minor { font-size:9px; }
+      .field-title { font-size:10px; }
+      .mode { gap:2px; }
+    }
+  </style>
+</head>
+
+<body>
+<main class="shell">
+  <form id="calcForm" novalidate>
+    <section class="panel" aria-label="サンプリング入力">
+
+      <div id="cameraPanel" class="camera-panel">
+        <div id="cameraViewport" class="camera-viewport">
+          <video
+            id="janVideo"
+            autoplay
+            muted
+            playsinline
+            webkit-playsinline
+            disablepictureinpicture
+            disableremoteplayback
+            aria-label="JAN読み取り用のカメラ映像"
+          ></video>
+
+          <p id="cameraPlaceholder" class="camera-placeholder">
+            ここにカメラ映像を表示します
+          </p>
+
+          <div class="camera-line" aria-hidden="true"></div>
+
+          <span id="cameraState" class="camera-state">
+            カメラ停止中
+          </span>
+        </div>
+
+        <div class="camera-tools">
+          <button
+            type="button"
+            class="btn camera-button"
+            id="startCamera"
+            aria-controls="janVideo"
+          >カメラ起動</button>
+
+          <button
+            type="button"
+            class="btn camera-stop"
+            id="stopCamera"
+            disabled
+          >停止</button>
+        </div>
+
+        <canvas id="janCanvas" hidden></canvas>
+      </div>
+
+      <div class="identity group">
+        <div class="field">
+          <label for="storeCode">店番</label>
+
+          <input
+            type="text"
+            id="storeCode"
+            name="storeCode"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="店番"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="janCode">
+            JAN <span class="minor">8桁／13桁</span>
+          </label>
+
+          <input
+            type="text"
+            id="janCode"
+            name="janCode"
+            inputmode="numeric"
+            maxlength="13"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="読取または手入力"
+            aria-describedby="janStatus"
+            required
+          >
+        </div>
+      </div>
+
+      <p
+        id="janStatus"
+        class="jan-status"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="grid group">
+        <div class="field">
+          <label for="minDisplay">
+            最低陳列量 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="minDisplay"
+            name="minDisplay"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            placeholder="例：6"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="orderUnit">
+            発注単位 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="orderUnit"
+            name="orderUnit"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            placeholder="例：10"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="demand group">
+        <div class="label-row">
+          <label for="maxLTSales">
+            LT中の想定最大販売数 <span class="minor">個</span>
+          </label>
+
+          <span class="minor" id="demand-help">
+            LT全体の合計
+          </span>
+        </div>
+
+        <input
+          type="number"
+          id="maxLTSales"
+          name="maxLTSales"
+          min="0"
+          step="1"
+          inputmode="numeric"
+          placeholder="例：25"
+          aria-describedby="demand-help"
+          required
+        >
+      </div>
+
+      <div class="grid group">
+        <div class="field">
+          <label for="salesFloorStock">
+            売場在庫 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="salesFloorStock"
+            name="salesFloorStock"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            placeholder="例：6"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="backroomStock">
+            BR在庫 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="backroomStock"
+            name="backroomStock"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            placeholder="なしは0"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="sum-heading">
+        <span class="field-title">
+          累積値＋発注済未納品数
+        </span>
+
+        <fieldset class="mode">
+          <legend class="sr-only">
+            累積値と発注済未納品数の入力方法
+          </legend>
+
+          <label>
+            <input
+              type="radio"
+              name="inputMode"
+              value="combined"
+              checked
+            >合算
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="inputMode"
+              value="separate"
+            >内訳
+          </label>
+        </fieldset>
+      </div>
+
+      <div id="combinedFields" class="field">
+        <label for="accumulated" class="sr-only">
+          累積値＋発注済未納品数（個）
+        </label>
+
+        <input
+          type="number"
+          id="accumulated"
+          name="accumulated"
+          step="1"
+          inputmode="text"
+          placeholder="合計（マイナスも可）"
+          required
+        >
+      </div>
+
+      <div id="separateFields" class="grid" hidden>
+        <div class="field">
+          <label for="cumulativeOnly">
+            累積値 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="cumulativeOnly"
+            name="cumulativeOnly"
+            step="1"
+            inputmode="text"
+            placeholder="マイナスも可"
+            disabled
+          >
+        </div>
+
+        <div class="field">
+          <label for="pendingOnly">
+            発注済未納品数 <span class="minor">個</span>
+          </label>
+
+          <input
+            type="number"
+            id="pendingOnly"
+            name="pendingOnly"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            placeholder="なしは0"
+            disabled
+          >
+        </div>
+      </div>
+
+      <p
+        id="errorMessage"
+        class="error"
+        role="alert"
+        hidden
+      ></p>
+
+      <div class="actions">
+        <button
+          type="submit"
+          class="btn primary"
+          id="calculateButton"
+        >計算する</button>
+
+        <button
+          type="button"
+          class="btn reset"
+          id="resetButton"
+        >リセット</button>
+      </div>
+
+      <section class="result-box" aria-labelledby="result-title">
+        <div aria-live="polite" aria-atomic="true">
+          <div class="result-row">
+            <h2 id="result-title">HHT入力値</h2>
+
+            <p id="result" class="result-value waiting">
+              未計算
+            </p>
+          </div>
+
+          <p
+            id="resultExplanation"
+            class="result-explanation"
+          ></p>
+        </div>
+      </section>
+
+      <p
+        id="submissionStatus"
+        class="submission-status"
+        role="status"
+        aria-live="polite"
+      >計算時にフォームへ送信</p>
+
+    </section>
+  </form>
+</main>
+
+<script>
+'use strict';
+
+// LT全体の想定最大販売数を直接入力する。
+// 平均販売数・安全在庫は再加算しない。
+const APP_VERSION = 'ordering-sampling-2.1.0';
+
+const el = id => document.getElementById(id);
+const form = el('calcForm');
+
+// 共有された事前入力リンクのQ01〜Q18に対応。
+// 計算ボタンを押すと、このフォームへ入力値と計算結果を送信する。
+const GOOGLE_FORM = {
+  url:'https://docs.google.com/forms/d/e/1FAIpQLSfai2e-Ta6zOmD0J3AuSjx0_updZ5QsvdSatWoEUk-W4z9ZxA/viewform',
+
+  entries:{
+    storeCode:'entry.346509662',        // 01 店番
+    janCode:'entry.50409100',           // 02 JANコード
+    minDisplay:'entry.2117060978',      // 03 最低陳列量
+    orderUnit:'entry.961693137',        // 04 発注単位
+    maxLTSales:'entry.1174672860',      // 05 LT中の想定最大販売数
+    salesFloorStock:'entry.336661373',  // 06 売場在庫
+    backroomStock:'entry.657907386',    // 07 BR在庫
+    inputMode:'entry.1911215740',       // 08 累積値の入力方法
+    cumulativeOnly:'entry.918002987',   // 09 累積値
+    pendingOnly:'entry.361084175',      // 10 発注済未納品数
+    accumulated:'entry.1421737639',     // 11 累積値＋発注済未納品数
+    currentCycle:'entry.855963683',     // 12 現在のサイクル合計
+    targetCycle:'entry.1611346263',     // 13 目標のサイクル合計
+    currentReserve:'entry.1026939516',  // 14 現在のLT販売への備え
+    hhtValue:'entry.800324500',         // 15 HHT入力値
+    calculatedAt:'entry.152212637',     // 16 計算日時
+    recordId:'entry.569093665',         // 17 記録ID
+    toolVersion:'entry.2126230404'      // 18 ツールバージョン
+  }
+};
+
+let currentSample = null;
+let sending = false;
+
+function formatNumber(value) {
+  return new Intl.NumberFormat('ja-JP').format(value);
+}
+
+function safeInteger(value,label) {
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(
+      label + 'が正確に扱える整数の範囲を超えています。'
+    );
+  }
+
+  return value;
+}
+
+function calculateModel(input) {
+  const rules = [
+    ['minDisplay',0],
+    ['orderUnit',1],
+    ['maxLTSales',0],
+    ['salesFloorStock',0],
+    ['backroomStock',0]
+  ];
+
+  rules.forEach(([key,min]) => {
+    safeInteger(input[key],key);
+
+    if (input[key] < min) {
+      throw new Error(key + 'が入力範囲外です。');
+    }
+  });
+
+  safeInteger(input.accumulated,'累積値＋発注済未納品数');
+
+  const stock = safeInteger(
+    input.salesFloorStock + input.backroomStock,
+    '在庫合計'
+  );
+
+  const current = safeInteger(
+    stock + input.accumulated,
+    '現在のサイクル合計'
+  );
+
+  const base = safeInteger(
+    input.minDisplay + input.orderUnit,
+    '最低陳列量＋発注単位'
+  );
+
+  const target = safeInteger(
+    base + input.maxLTSales,
+    '目標のサイクル合計'
+  );
+
+  const reserve = safeInteger(
+    current - base,
+    'LT販売への備え'
+  );
+
+  const delta = safeInteger(
+    target - current,
+    'HHT入力値'
+  );
+
+  return {stock,current,target,reserve,delta};
+}
+
+function markError(message,id) {
+  el('errorMessage').textContent = message;
+  el('errorMessage').hidden = false;
+
+  if (id) {
+    el(id).setAttribute('aria-invalid','true');
+    el(id).focus();
+  }
+}
+
+function clearError() {
+  el('errorMessage').hidden = true;
+  el('errorMessage').textContent = '';
+
+  form.querySelectorAll('[aria-invalid]').forEach(field => {
+    field.removeAttribute('aria-invalid');
+  });
+}
+
+function readInteger(id,label,min) {
+  const raw = el(id).value.trim();
+
+  if (raw === '') {
+    throw {
+      message:label + 'を入力してください。数量がなければ0を入力します。',
+      field:id
+    };
+  }
+
+  const value = Number(raw);
+
+  if (!Number.isSafeInteger(value)) {
+    throw {
+      message:label + 'は整数で入力してください。',
+      field:id
+    };
+  }
+
+  if (min !== undefined && value < min) {
+    throw {
+      message:label + 'は' + min + '以上で入力してください。',
+      field:id
+    };
+  }
+
+  return value;
+}
+
+function getMode() {
+  return form.querySelector(
+    'input[name="inputMode"]:checked'
+  ).value;
+}
+
+function readInputs() {
+  const storeCode = normalizeJan(el('storeCode').value);
+  const janCode = normalizeJan(el('janCode').value);
+
+  if (!/^\d+$/.test(storeCode)) {
+    throw {
+      message:'店番を半角数字で入力してください。',
+      field:'storeCode'
+    };
+  }
+
+  if (!isValidJan(janCode)) {
+    throw {
+      message:'JANを確認してください。チェックデジットが一致する8桁または13桁の番号が必要です。',
+      field:'janCode'
+    };
+  }
+
+  el('storeCode').value = storeCode;
+  el('janCode').value = janCode;
+
+  const data = {
+    storeCode,
+    janCode,
+    minDisplay:readInteger('minDisplay','最低陳列量',0),
+    orderUnit:readInteger('orderUnit','発注単位',1),
+    maxLTSales:readInteger('maxLTSales','LT中の想定最大販売数',0),
+    salesFloorStock:readInteger('salesFloorStock','売場在庫',0),
+    backroomStock:readInteger('backroomStock','BR在庫',0),
+    mode:getMode(),
+    cumulativeOnly:null,
+    pendingOnly:null
+  };
+
+  if (data.mode === 'combined') {
+    data.accumulated = readInteger(
+      'accumulated',
+      '累積値＋発注済未納品数'
+    );
+
+  } else {
+    data.cumulativeOnly = readInteger(
+      'cumulativeOnly',
+      '累積値'
+    );
+
+    data.pendingOnly = readInteger(
+      'pendingOnly',
+      '発注済未納品数',
+      0
+    );
+
+    data.accumulated = safeInteger(
+      data.cumulativeOnly + data.pendingOnly,
+      '累積値＋発注済未納品数'
+    );
+  }
+
+  return data;
+}
+
+function setModeFields(mode,transfer = false) {
+  if (transfer && mode === 'combined') {
+    const a = el('cumulativeOnly').value.trim();
+    const p = el('pendingOnly').value.trim();
+    const sum = Number(a) + Number(p);
+
+    const valid =
+      a !== '' &&
+      p !== '' &&
+      Number.isSafeInteger(Number(a)) &&
+      Number.isSafeInteger(Number(p)) &&
+      Number(p) >= 0 &&
+      Number.isSafeInteger(sum);
+
+    el('accumulated').value = valid ? String(sum) : '';
+
+  } else if (transfer && mode === 'separate') {
+    el('cumulativeOnly').value = '';
+    el('pendingOnly').value = '';
+  }
+
+  const separate = mode === 'separate';
+
+  el('combinedFields').hidden = separate;
+  el('separateFields').hidden = !separate;
+
+  el('accumulated').disabled = separate;
+  el('accumulated').required = !separate;
+
+  ['cumulativeOnly','pendingOnly'].forEach(id => {
+    el(id).disabled = !separate;
+    el(id).required = separate;
+  });
+}
+
+function invalidateResult(edited = true) {
+  el('result').className = 'result-value waiting';
+  el('result').textContent = edited ? '未再計算' : '未計算';
+
+  el('resultExplanation').textContent =
+    edited
+      ? '入力変更後は、もう一度計算してください。'
+      : '';
+}
+
+function renderResult({input,model}) {
+  const d = model.delta;
+
+  el('result').className =
+    'result-value ' +
+    (d > 0 ? 'plus' : d < 0 ? 'minus' : 'zero');
+
+  el('result').textContent =
+    d > 0
+      ? '増数 ' + formatNumber(d) + ' 個'
+      : d < 0
+        ? '減数 ' + formatNumber(-d) + ' 個'
+        : '変更なし 0 個';
+
+  el('resultExplanation').textContent =
+    'LT備え ' +
+    formatNumber(model.reserve) +
+    ' → 想定 ' +
+    formatNumber(input.maxLTSales) +
+    ' 個';
+}
+
+function setSubmissionStatus(message,problem = false) {
+  el('submissionStatus').textContent = message;
+
+  el('submissionStatus').className =
+    'submission-status' +
+    (problem ? ' problem' : '');
+}
+
+function getFormConfig() {
+  const entries = Object.entries(GOOGLE_FORM.entries);
+
+  if (
+    !GOOGLE_FORM.url &&
+    entries.every(([,id]) => !id)
+  ) {
+    return {state:'unset'};
+  }
+
+  try {
+    const url = new URL(GOOGLE_FORM.url);
+
+    const validPath =
+      /^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/(?:viewform|formResponse)\/?$/;
+
+    if (
+      url.protocol !== 'https:' ||
+      url.hostname !== 'docs.google.com' ||
+      !validPath.test(url.pathname)
+    ) {
+      throw new Error();
+    }
+
+    if (
+      entries.length !== 18 ||
+      entries.some(([,id]) => !/^entry\.\d+$/.test(id)) ||
+      new Set(entries.map(([,id]) => id)).size !== 18
+    ) {
+      throw new Error();
+    }
+
+    url.pathname = url.pathname.replace(
+      /\/(?:viewform|formResponse)\/?$/,
+      '/formResponse'
+    );
+
+    url.search = '';
+    url.hash = '';
+
+    return {
+      state:'ready',
+      url:url.href,
+      entries
+    };
+
+  } catch (_) {
+    return {state:'invalid'};
+  }
+}
+
+function showReadyStatus() {
+  const state = getFormConfig().state;
+
+  el('calculateButton').textContent =
+    state === 'ready'
+      ? '計算して送信'
+      : '計算する';
+
+  setSubmissionStatus(
+    state === 'ready'
+      ? '計算時にフォームへ送信'
+      : state === 'unset'
+        ? 'フォーム未接続・計算のみ'
+        : 'フォーム設定を確認してください。',
+    state === 'invalid'
+  );
+}
+
+function makeRecordId() {
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID === 'function'
+  ) {
+    return window.crypto.randomUUID();
+  }
+
+  if (
+    window.crypto &&
+    typeof window.crypto.getRandomValues === 'function'
+  ) {
+    const bytes = window.crypto.getRandomValues(
+      new Uint8Array(16)
+    );
+
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+
+    const hex = Array.from(
+      bytes,
+      b => b.toString(16).padStart(2,'0')
+    ).join('');
+
+    return [
+      hex.slice(0,8),
+      hex.slice(8,12),
+      hex.slice(12,16),
+      hex.slice(16,20),
+      hex.slice(20)
+    ].join('-');
+  }
+
+  throw new Error(
+    '記録IDを作成できません。HTTPSの公開ページを利用してください。'
+  );
+}
+
+function buildRecord(input,model) {
+  // 端末時計を日本時間のISO文字列にする。
+  // フォーム側の受付時刻とは別。
+  const calculatedAt = new Date(
+    Date.now() + 9 * 3600000
+  ).toISOString().replace('Z','+09:00');
+
+  return Object.freeze({
+    storeCode:input.storeCode,
+    janCode:input.janCode,
+
+    minDisplay:String(input.minDisplay),
+    orderUnit:String(input.orderUnit),
+    maxLTSales:String(input.maxLTSales),
+    salesFloorStock:String(input.salesFloorStock),
+    backroomStock:String(input.backroomStock),
+
+    inputMode:
+      input.mode === 'separate'
+        ? '内訳'
+        : '合算',
+
+    cumulativeOnly:
+      input.cumulativeOnly === null
+        ? ''
+        : String(input.cumulativeOnly),
+
+    pendingOnly:
+      input.pendingOnly === null
+        ? ''
+        : String(input.pendingOnly),
+
+    accumulated:String(input.accumulated),
+    currentCycle:String(model.current),
+    targetCycle:String(model.target),
+    currentReserve:String(model.reserve),
+    hhtValue:String(model.delta),
+
+    calculatedAt,
+    recordId:makeRecordId(),
+    toolVersion:APP_VERSION
+  });
+}
+
+async function sendSample(sample,config) {
+  if (sample.attempted) {
+    setSubmissionStatus(
+      '同じ内容の再送は省略。受付結果はフォームで確認してください。'
+    );
+    return;
+  }
+
+  if (navigator.onLine === false) {
+    setSubmissionStatus(
+      'オフライン・未送信。接続後にもう一度計算してください。',
+      true
+    );
+    return;
+  }
+
+  const body = new URLSearchParams();
+
+  config.entries.forEach(([key,id]) => {
+    body.set(id,sample.record[key]);
+  });
+
+  const controls = Array.from(
+    form.querySelectorAll('input,button')
+  ).map(node => [node,node.disabled]);
+
+  const controller = new AbortController();
+
+  sending = true;
+  sample.attempted = true;
+
+  controls.forEach(([node]) => {
+    node.disabled = true;
+  });
+
+  el('calculateButton').textContent = '送信中…';
+  setSubmissionStatus('フォームへ送信しています。');
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    15000
+  );
+
+  try {
+    await fetch(config.url,{
+      method:'POST',
+      mode:'no-cors',
+      credentials:'omit',
+      body,
+      signal:controller.signal
+    });
+
+    // no-corsでは受付結果を読めないため、
+    // 記録成功と断定しない。
+    setSubmissionStatus(
+      '送信処理済み・受付結果はフォームで確認'
+    );
+
+  } catch (_) {
+    // 通信エラーでも到着済みの可能性がある。
+    // 二重記録を避け、自動再送しない。
+    setSubmissionStatus(
+      '送信結果不明。フォームの回答を確認してください。',
+      true
+    );
+
+  } finally {
+    clearTimeout(timer);
+    sending = false;
+
+    controls.forEach(([node,disabled]) => {
+      node.disabled = disabled;
+    });
+
+    el('calculateButton').textContent = '計算して送信';
+  }
+}
+
+form.addEventListener('submit',async event => {
+  event.preventDefault();
+
+  if (sending) return;
+
+  if (janScanner.active) {
+    stopJanCamera();
+  }
+
+  clearError();
+  invalidateResult(false);
+
+  try {
+    const input = readInputs();
+    const model = calculateModel(input);
+
+    renderResult({input,model});
+
+    if (
+      document.activeElement &&
+      typeof document.activeElement.blur === 'function'
+    ) {
+      document.activeElement.blur();
+    }
+
+    const config = getFormConfig();
+
+    if (config.state !== 'ready') {
+      showReadyStatus();
+      return;
+    }
+
+    const fingerprint = JSON.stringify(input);
+
+    if (
+      !currentSample ||
+      currentSample.fingerprint !== fingerprint
+    ) {
+      currentSample = {
+        fingerprint,
+        record:buildRecord(input,model),
+        attempted:false
+      };
+    }
+
+    await sendSample(currentSample,config);
+
+  } catch (error) {
+    markError(
+      error.message || '入力値を確認してください。',
+      error.field
+    );
+  }
+});
+
+form.addEventListener('input',() => {
+  if (sending) return;
+
+  clearError();
+  invalidateResult(true);
+  showReadyStatus();
+});
+
+form.querySelectorAll(
+  'input[name="inputMode"]'
+).forEach(radio => {
+  radio.addEventListener('change',() => {
+    if (sending) return;
+
+    setModeFields(getMode(),true);
+    clearError();
+    invalidateResult(true);
+    showReadyStatus();
+  });
+});
+
+el('resetButton').addEventListener('click',() => {
+  form.reset();
+});
+
+form.addEventListener('reset',event => {
+  event.preventDefault();
+
+  if (sending) return;
+
+  stopJanCamera();
+
+  // 店番と入力方法を維持して、
+  // 商品ごとの項目だけをクリアする。
+  [
+    'janCode',
+    'minDisplay',
+    'orderUnit',
+    'maxLTSales',
+    'salesFloorStock',
+    'backroomStock',
+    'accumulated',
+    'cumulativeOnly',
+    'pendingOnly'
+  ].forEach(id => {
+    el(id).value = '';
+  });
+
+  currentSample = null;
+
+  setModeFields(getMode());
+  clearError();
+  invalidateResult(false);
+  showReadyStatus();
+
+  if (
+    document.activeElement &&
+    typeof document.activeElement.blur === 'function'
+  ) {
+    document.activeElement.blur();
+  }
+});
+
+el('storeCode').addEventListener('blur',() => {
+  el('storeCode').value = normalizeJan(
+    el('storeCode').value
+  );
+});
+
+function normalizeJan(value) {
+  return String(value).trim().replace(
+    /[０-９]/g,
+    character => String(character.charCodeAt(0) - 0xFF10)
+  );
+}
+
+function isValidJan(value) {
+  if (
+    !/^(?:\d{8}|\d{13})$/.test(value) ||
+    /^0+$/.test(value)
+  ) {
+    return false;
+  }
+
+  let sum = 0;
+
+  for (
+    let i = value.length - 2, weight = 3;
+    i >= 0;
+    i--, weight = weight === 3 ? 1 : 3
+  ) {
+    sum += Number(value[i]) * weight;
+  }
+
+  return (10 - sum % 10) % 10 ===
+    Number(value[value.length - 1]);
+}
+
+const janScanner = {
+  generation:0,
+  active:false,
+  stream:null,
+  decoder:null,
+  timer:null,
+  previousCode:'',
+  previousAt:0,
+  streak:0,
+  lastFrameTime:-1,
+  startedAt:0
+};
+
+let zxingLoadPromise = null;
+
+function setJanStatus(message,problem = false) {
+  el('janStatus').textContent = message;
+
+  el('janStatus').className =
+    'jan-status' + (problem ? ' problem' : '');
+}
+
+function stopJanCamera(message = '',problem = false) {
+  // 非同期の許可・解析結果が後から返っても、
+  // 古い起動分を採用しない。
+  janScanner.generation++;
+  janScanner.active = false;
+
+  clearTimeout(janScanner.timer);
+  janScanner.timer = null;
+
+  if (janScanner.stream) {
+    janScanner.stream.getTracks().forEach(track => {
+      track.stop();
+    });
+  }
+
+  janScanner.stream = null;
+
+  const video = el('janVideo');
+  video.pause();
+  video.srcObject = null;
+
+  if (
+    janScanner.decoder &&
+    janScanner.decoder.reader
+  ) {
+    janScanner.decoder.reader.reset();
+  }
+
+  janScanner.decoder = null;
+  janScanner.previousCode = '';
+  janScanner.streak = 0;
+
+  el('cameraPlaceholder').hidden = false;
+  el('cameraPlaceholder').textContent =
+    'ここにカメラ映像を表示します';
+
+  el('cameraState').textContent = 'カメラ停止中';
+
+  el('startCamera').disabled = false;
+  el('stopCamera').disabled = true;
+
+  setJanStatus(message,problem);
+}
+
+function loadZxing() {
+  if (
+    window.ZXing &&
+    window.ZXing.MultiFormatReader
+  ) {
+    return Promise.resolve(window.ZXing);
+  }
+
+  if (zxingLoadPromise) {
+    return zxingLoadPromise;
+  }
+
+  zxingLoadPromise = new Promise((resolve,reject) => {
+    const script = document.createElement('script');
+    let finished = false;
+
+    const finish = error => {
+      if (finished) return;
+
+      finished = true;
+
+      clearTimeout(timeout);
+      script.onload = null;
+      script.onerror = null;
+
+      if (error) {
+        script.remove();
+        reject(error);
+      } else {
+        resolve(window.ZXing);
+      }
+    };
+
+    const timeout = setTimeout(
+      () => finish({name:'JanLibraryError'}),
+      15000
+    );
+
+    script.src =
+      'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+
+    script.async = true;
+
+    script.integrity =
+      'sha384-BzBxP10ZE72aitqj5UMmUsbKFliP/DZqA8Wq+BNNhlIJDGoEd1tpkMYXOg9+n6sB';
+
+    script.crossOrigin = 'anonymous';
+    script.referrerPolicy = 'no-referrer';
+
+    script.onload = () => finish(
+      window.ZXing && window.ZXing.MultiFormatReader
+        ? null
+        : {name:'JanLibraryError'}
+    );
+
+    script.onerror = () => finish({
+      name:'JanLibraryError'
+    });
+
+    document.head.appendChild(script);
+
+  }).catch(error => {
+    zxingLoadPromise = null;
+    throw error;
+  });
+
+  return zxingLoadPromise;
+}
+
+async function createJanDecoder(preferNative = true) {
+  if (
+    preferNative &&
+    'BarcodeDetector' in window
+  ) {
+    try {
+      const formats =
+        await window.BarcodeDetector.getSupportedFormats();
+
+      if (
+        ['ean_13','ean_8'].every(format =>
+          formats.includes(format)
+        )
+      ) {
+        return {
+          kind:'native',
+          detector:new window.BarcodeDetector({
+            formats:['ean_13','ean_8']
+          })
+        };
+      }
+
+    } catch (error) {
+      // 標準APIが使えない場合は互換用ライブラリへ進む。
+    }
+  }
+
+  const Z = await loadZxing();
+  const hints = new Map();
+
+  hints.set(
+    Z.DecodeHintType.POSSIBLE_FORMATS,
+    [Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8]
+  );
+
+  hints.set(Z.DecodeHintType.TRY_HARDER,true);
+
+  return {
+    kind:'zxing',
+    Z,
+    hints,
+    reader:new Z.MultiFormatReader()
+  };
+}
+
+async function decodeJanCanvas(decoder,canvas) {
+  if (decoder.kind === 'native') {
+    const found = await decoder.detector.detect(canvas);
+
+    return found
+      .filter(item =>
+        item.format === 'ean_13' ||
+        item.format === 'ean_8'
+      )
+      .map(item => item.rawValue);
+  }
+
+  const {Z,reader,hints} = decoder;
+
+  try {
+    const source =
+      new Z.HTMLCanvasElementLuminanceSource(canvas);
+
+    const bitmap =
+      new Z.BinaryBitmap(new Z.HybridBinarizer(source));
+
+    const result = reader.decode(bitmap,hints);
+
+    return [
+      Z.BarcodeFormat.EAN_13,
+      Z.BarcodeFormat.EAN_8
+    ].includes(result.getBarcodeFormat())
+      ? [result.getText()]
+      : [];
+
+  } catch (error) {
+    if (
+      error instanceof Z.NotFoundException ||
+      error instanceof Z.ChecksumException ||
+      error instanceof Z.FormatException
+    ) {
+      return [];
+    }
+
+    throw error;
+
+  } finally {
+    reader.reset();
+  }
+}
+
+function captureJanFrame() {
+  const video = el('janVideo');
+  const viewport = el('cameraViewport');
+  const canvas = el('janCanvas');
+
+  const ratio =
+    viewport.clientWidth && viewport.clientHeight
+      ? viewport.clientWidth / viewport.clientHeight
+      : 3.5;
+
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+
+  // 実際に表示している中央の範囲だけを解析する。
+  // 赤い案内線は重ね表示なので、解析画像には含まれない。
+  const sw = Math.min(vw,vh * ratio);
+  const sh = sw / ratio;
+
+  const sx = (vw - sw) / 2;
+  const sy = (vh - sh) / 2;
+
+  const cw = Math.round(Math.min(sw,1280));
+  const ch = Math.round(cw / ratio);
+
+  if (canvas.width !== cw) {
+    canvas.width = cw;
+  }
+
+  if (canvas.height !== ch) {
+    canvas.height = ch;
+  }
+
+  const context = canvas.getContext('2d',{
+    willReadFrequently:true
+  });
+
+  if (!context) {
+    throw {name:'JanCaptureError'};
+  }
+
+  context.drawImage(
+    video,
+    sx,
+    sy,
+    sw,
+    sh,
+    0,
+    0,
+    cw,
+    ch
+  );
+
+  return canvas;
+}
+
+function acceptJanCode(code) {
+  if (!isValidJan(code)) return;
+
+  stopJanCamera();
+
+  el('janCode').value = code;
+
+  el('janCode').dispatchEvent(
+    new Event('input',{bubbles:true})
+  );
+
+  el('cameraPlaceholder').textContent =
+    'JAN読み取り完了';
+
+  el('cameraState').textContent =
+    '読み取り完了';
+
+  setJanStatus('JAN読み取り完了');
+}
+
+async function readJanFrame(token) {
+  if (
+    !janScanner.active ||
+    token !== janScanner.generation
+  ) {
+    return;
+  }
+
+  const video = el('janVideo');
+
+  try {
+    if (
+      video.readyState >= 2 &&
+      video.videoWidth > 0 &&
+      video.videoHeight > 0 &&
+      video.currentTime !== janScanner.lastFrameTime
+    ) {
+      janScanner.lastFrameTime = video.currentTime;
+
+      const canvas = captureJanFrame();
+      let codes;
+
+      try {
+        codes = await decodeJanCanvas(
+          janScanner.decoder,
+          canvas
+        );
+
+      } catch (error) {
+        if (
+          !janScanner.active ||
+          token !== janScanner.generation
+        ) {
+          return;
+        }
+
+        if (janScanner.decoder.kind !== 'native') {
+          throw error;
+        }
+
+        setJanStatus(
+          '互換用の読み取り機能を準備しています。'
+        );
+
+        const fallback = await createJanDecoder(false);
+
+        if (
+          !janScanner.active ||
+          token !== janScanner.generation
+        ) {
+          return;
+        }
+
+        janScanner.decoder = fallback;
+        setJanStatus('バーコード全体を枠内へ');
+
+        codes = await decodeJanCanvas(fallback,canvas);
+      }
+
+      if (
+        !janScanner.active ||
+        token !== janScanner.generation
+      ) {
+        return;
+      }
+
+      const unique = [
+        ...new Set(codes.filter(code => isValidJan(code)))
+      ];
+
+      const now = Date.now();
+
+      if (unique.length === 1) {
+        const code = unique[0];
+
+        janScanner.streak =
+          code === janScanner.previousCode &&
+          now - janScanner.previousAt < 1500
+            ? janScanner.streak + 1
+            : 1;
+
+        janScanner.previousCode = code;
+        janScanner.previousAt = now;
+
+        if (janScanner.streak >= 2) {
+          acceptJanCode(code);
+          return;
+        }
+
+      } else {
+        janScanner.previousCode = '';
+        janScanner.streak = 0;
+
+        if (unique.length > 1) {
+          setJanStatus(
+            'バーコードを1つだけ枠内に入れてください。'
+          );
+        }
+      }
+
+    } else if (
+      video.readyState < 2 &&
+      Date.now() - janScanner.startedAt > 15000
+    ) {
+      throw {name:'JanCaptureError'};
+    }
+
+  } catch (error) {
+    if (token === janScanner.generation) {
+      stopJanCamera(cameraErrorText(error),true);
+    }
+
+    return;
+  }
+
+  if (
+    janScanner.active &&
+    token === janScanner.generation
+  ) {
+    janScanner.timer = setTimeout(
+      () => readJanFrame(token),
+      180
+    );
+  }
+}
+
+function cameraErrorText(error) {
+  switch (error.name) {
+    case 'JanSecureError':
+      return 'カメラはHTTPSで公開したページをブラウザで開いて使用してください。端末内のHTMLプレビューでは利用できない場合があります。';
+
+    case 'JanPolicyError':
+      return 'この埋め込み画面では、カメラの利用が許可されていません。公開した計算ツール自体を別タブで開いてください。HTML内部では、この制限を解除できません。';
+
+    case 'JanUnavailableError':
+      return 'この画面ではカメラ機能を利用できません。公開したHTTPSのページをChromeやSafariなどのブラウザで開くか、JANを手入力してください。';
+
+    case 'NotAllowedError':
+    case 'PermissionDeniedError':
+    case 'SecurityError':
+      return 'カメラが許可されていません。ブラウザのサイト設定を確認してください。埋め込み中の場合は、計算ツールの公開URLを別タブで開いてください。';
+
+    case 'NotFoundError':
+    case 'DevicesNotFoundError':
+      return '利用できるカメラが見つかりません。JANを手入力してください。';
+
+    case 'NotReadableError':
+    case 'TrackStartError':
+      return 'カメラを開始できません。ほかのカメラアプリを閉じて、もう一度お試しください。';
+
+    case 'OverconstrainedError':
+      return 'この端末ではカメラの条件を満たせませんでした。別のブラウザで開くか、JANを手入力してください。';
+
+    case 'JanLibraryError':
+      return '読み取り機能を読み込めませんでした。通信環境を確認して再度起動するか、JANを手入力してください。';
+
+    case 'JanCaptureError':
+      return 'カメラ映像を取得できませんでした。もう一度起動するか、JANを手入力してください。';
+
+    default:
+      return '読み取りを続けられませんでした。もう一度カメラを起動するか、JANを手入力してください。';
+  }
+}
+
+async function startJanCamera() {
+  if (janScanner.active) return;
+
+  stopJanCamera();
+
+  const token = janScanner.generation;
+
+  janScanner.active = true;
+  janScanner.lastFrameTime = -1;
+
+  el('startCamera').disabled = true;
+  el('stopCamera').disabled = false;
+
+  el('cameraPlaceholder').textContent =
+    'カメラを起動しています';
+
+  el('cameraState').textContent = '起動中';
+
+  setJanStatus(
+    'カメラを準備しています。確認が出たら利用を許可してください。'
+  );
+
+  try {
+    if (!window.isSecureContext) {
+      throw {name:'JanSecureError'};
+    }
+
+    const policy =
+      document.permissionsPolicy ||
+      document.featurePolicy;
+
+    if (
+      policy &&
+      typeof policy.allowsFeature === 'function' &&
+      !policy.allowsFeature('camera')
+    ) {
+      throw {name:'JanPolicyError'};
+    }
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      throw {name:'JanUnavailableError'};
+    }
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{
+          facingMode:{ideal:'environment'},
+          width:{ideal:1920},
+          height:{ideal:1080}
+        }
+      });
+
+    if (
+      !janScanner.active ||
+      token !== janScanner.generation
+    ) {
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
+
+      return;
+    }
+
+    janScanner.stream = stream;
+
+    stream.getVideoTracks().forEach(track => {
+      track.addEventListener('ended',() => {
+        if (token === janScanner.generation) {
+          stopJanCamera(
+            'カメラが停止しました。再開するには「カメラ起動」を押してください。'
+          );
+        }
+      });
+    });
+
+    const video = el('janVideo');
+
+    video.muted = true;
+    video.srcObject = stream;
+
+    await video.play();
+
+    if (
+      !janScanner.active ||
+      token !== janScanner.generation
+    ) {
+      return;
+    }
+
+    el('cameraPlaceholder').hidden = true;
+    el('cameraState').textContent = '映像表示中';
+
+    setJanStatus('読み取り機能を準備しています。');
+
+    const decoder = await createJanDecoder();
+
+    if (
+      !janScanner.active ||
+      token !== janScanner.generation
+    ) {
+      return;
+    }
+
+    janScanner.decoder = decoder;
+    janScanner.startedAt = Date.now();
+
+    el('cameraState').textContent = '読み取り中';
+    setJanStatus('バーコード全体を枠内へ');
+
+    readJanFrame(token);
+
+  } catch (error) {
+    if (token === janScanner.generation) {
+      stopJanCamera(cameraErrorText(error),true);
+    }
+  }
+}
+
+el('startCamera').addEventListener(
+  'click',
+  startJanCamera
+);
+
+el('stopCamera').addEventListener('click',() => {
+  stopJanCamera('カメラを停止しました。');
+});
+
+el('janCode').addEventListener('input',() => {
+  if (janScanner.active) {
+    stopJanCamera();
+  }
+
+  el('janCode').removeAttribute('aria-invalid');
+  setJanStatus('');
+});
+
+el('janCode').addEventListener('blur',() => {
+  const value = normalizeJan(el('janCode').value);
+  el('janCode').value = value;
+
+  if (value && !isValidJan(value)) {
+    el('janCode').setAttribute('aria-invalid','true');
+
+    setJanStatus(
+      'JANは8桁または13桁の数字です。商品の印字と照合してください（チェックデジットが一致しません）。',
+      true
+    );
+  }
+});
+
+document.addEventListener('visibilitychange',() => {
+  if (document.hidden && janScanner.active) {
+    stopJanCamera('カメラを停止しました。');
+  }
+});
+
+window.addEventListener('pagehide',() => {
+  stopJanCamera();
+});
+
+setModeFields(getMode());
+showReadyStatus();
+</script>
+</body>
+</html>
