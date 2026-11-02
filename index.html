@@ -11,7 +11,7 @@
     [hidden] { display:none !important; }
     body { margin:0; padding:env(safe-area-inset-top) 0 calc(var(--dock-space,130px) + env(safe-area-inset-bottom)); background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif; font-size:12px; line-height:1.4; }
     body.wizard-open { overflow:hidden; overscroll-behavior:none; }
-    button,input { font:inherit; }
+    button,input,select { font:inherit; }
     button { cursor:pointer; touch-action:manipulation; }
     button:disabled { cursor:default; opacity:.45; }
     button:focus-visible,input:focus-visible { outline:2px solid #a9cef5; outline-offset:2px; }
@@ -29,6 +29,18 @@
     .camera-state { position:absolute; top:5px; left:6px; max-width:calc(100% - 12px); padding:2px 5px; border-radius:3px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; z-index:3; pointer-events:none; overflow-wrap:anywhere; }
     .camera-hint { margin:4px 2px 0; min-height:14px; color:var(--muted); font-size:10px; line-height:1.4; overflow-wrap:anywhere; }
     .camera-hint.problem { color:#a42b37; }
+    .camera-options { margin:5px 0 0; border:1px solid var(--line); border-radius:6px; background:#fff; }
+    .camera-options summary { min-height:44px; padding:12px 8px; cursor:pointer; color:var(--navy); font-weight:650; }
+    .camera-options-body { padding:0 8px 8px; }
+    .camera-options-body p { margin:4px 0 8px; font-size:11px; overflow-wrap:anywhere; }
+    .camera-setting { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:center; gap:6px; margin:5px 0; min-width:0; }
+    .camera-setting select { width:100%; min-width:0; min-height:44px; padding:6px; border:1px solid #bacbdc; border-radius:5px; background:#fff; color:var(--ink); font-size:16px; }
+    .camera-range-label { display:flex; justify-content:space-between; gap:8px; margin:7px 0 0; }
+    .camera-options input[type="range"] { display:block; width:100%; min-width:0; height:44px; margin:0; accent-color:var(--blue); }
+    .camera-control-buttons { display:flex; gap:6px; margin-top:5px; }
+    .camera-control-buttons > button { flex:1; }
+    .camera-control-status { color:var(--muted); }
+    .camera-control-status:empty { display:none; }
     .btn { min-width:0; min-height:44px; padding:7px 8px; border:1px solid #bacbdc; border-radius:6px; background:#fff; color:var(--navy); font-weight:700; line-height:1.3; }
     .primary { border-color:var(--blue); background:var(--blue); color:#fff; font-size:14px; }
     .primary:hover { background:#034e9d; }
@@ -115,27 +127,66 @@
     .result-sheet .result-panel { margin:0; padding:10px; }
     .result-sheet .review-actions { flex:0 0 auto; margin-top:8px; }
     .result-content .submission-status { margin:8px 2px 2px; }
-    @media(max-width:350px) {
-      .setup-top { grid-template-columns:68px minmax(0,1fr); gap:6px; }
-      .preset { padding-left:4px; padding-right:4px; font-size:10px; }
-      .field-choice { gap:5px; padding-left:5px; padding-right:5px; font-size:10px; }
-      .mode-options { gap:6px; }
-      .action-dock .primary { font-size:12px; }
-    }
+    @media(max-width:350px) { .setup-top { grid-template-columns:68px minmax(0,1fr); gap:6px; } .preset { padding-left:4px; padding-right:4px; font-size:10px; } .field-choice { gap:5px; padding-left:5px; padding-right:5px; font-size:10px; } .mode-options { gap:6px; } .action-dock .primary { font-size:12px; } }
   </style>
 </head>
 <body>
+  <section id="cameraPanel" aria-label="JAN読み取りカメラ">
+    <div id="cameraViewport" class="camera-viewport">
+      <video id="janVideo" autoplay muted playsinline webkit-playsinline disablepictureinpicture disableremoteplayback aria-label="JAN読み取り用のカメラ映像"></video>
+      <p id="cameraPlaceholder" class="camera-placeholder">カメラを準備しています</p>
+      <div class="camera-line" aria-hidden="true"></div>
+      <span id="cameraState" class="camera-state">準備中</span>
+    </div>
+    <p id="cameraHint" class="camera-hint" role="status"></p>
 
-<section id="cameraPanel" aria-label="JAN読み取りカメラ">
-  <div id="cameraViewport" class="camera-viewport">
-    <video id="janVideo" autoplay muted playsinline webkit-playsinline disablepictureinpicture disableremoteplayback aria-label="JAN読み取り用のカメラ映像"></video>
-    <p id="cameraPlaceholder" class="camera-placeholder">カメラを準備しています</p>
-    <div class="camera-line" aria-hidden="true"></div>
-    <span id="cameraState" class="camera-state">準備中</span>
-  </div>
-  <p id="cameraHint" class="camera-hint" role="status"></p>
-  <canvas id="janCanvas" hidden></canvas>
-</section>
+    <details id="cameraOptions" class="camera-options" hidden>
+      <summary>ピント・ズーム・カメラ調整</summary>
+      <div class="camera-options-body">
+        <p id="cameraInfo"></p>
+        <p>調整を閉じると読み取り再開。ぼける時は少し離し、バーコード左右の白い余白も枠内に入れてください。</p>
+
+        <label class="camera-setting" id="cameraDeviceRow">
+          <span>カメラ</span>
+          <select id="cameraDevice">
+            <option value="">背面（自動）</option>
+          </select>
+        </label>
+
+        <label class="camera-setting">
+          <span>画質</span>
+          <select id="cameraQuality">
+            <option value="high">高画質（4K優先）</option>
+            <option value="standard">標準（フルHD優先）</option>
+          </select>
+        </label>
+
+        <div id="cameraZoomRow" hidden>
+          <label class="camera-range-label" for="cameraZoom">
+            <span>ズーム</span>
+            <span id="cameraZoomValue"></span>
+          </label>
+          <input type="range" id="cameraZoom" min="1" max="3" step="0.1" value="1">
+        </div>
+
+        <div id="cameraManualFocusRow" hidden>
+          <label class="camera-range-label" for="cameraManualFocus">
+            <span>手動ピント</span>
+            <span id="cameraFocusValue"></span>
+          </label>
+          <input type="range" id="cameraManualFocus" min="0" max="1" step="0.01" value="0">
+        </div>
+
+        <div class="camera-control-buttons">
+          <button type="button" id="cameraFocus" class="btn secondary" hidden>自動ピント</button>
+          <button type="button" id="cameraTorch" class="btn" aria-pressed="false" hidden>ライト OFF</button>
+        </div>
+        <p id="cameraControlStatus" class="camera-control-status" role="status"></p>
+      </div>
+    </details>
+
+    <canvas id="janCanvas" hidden></canvas>
+  </section>
 
 <main class="shell">
   <section id="setupPanel" class="panel" aria-label="入力項目の設定">
@@ -185,14 +236,8 @@
     <div id="modeSettings" class="mode-settings">
       <span class="mode-label" id="modeLabel">累積値・未納品の入力</span>
       <div class="mode-options" role="radiogroup" aria-labelledby="modeLabel">
-        <label>
-          <input type="radio" id="modeCombined" name="inputMode" value="combined" checked>
-          合計
-        </label>
-        <label>
-          <input type="radio" id="modeSeparate" name="inputMode" value="separate">
-          別々
-        </label>
+        <label><input type="radio" id="modeCombined" name="inputMode" value="combined" checked>合計</label>
+        <label><input type="radio" id="modeSeparate" name="inputMode" value="separate">別々</label>
       </div>
     </div>
 
@@ -208,10 +253,7 @@
   </section>
 
   <p id="submissionStatus" class="submission-status" role="status" aria-live="polite"></p>
-
-  <noscript>
-    <p class="error">このツールを使うには、ブラウザのJavaScriptを有効にしてください。</p>
-  </noscript>
+  <noscript><p class="error">このツールを使うには、ブラウザのJavaScriptを有効にしてください。</p></noscript>
 </main>
 
 <nav id="actionDock" class="action-dock" aria-label="サンプリングの操作">
@@ -308,7 +350,7 @@
 <script>
 'use strict';
 
-const APP_VERSION = 'ordering-sampling-3.1.3';
+const APP_VERSION = 'ordering-sampling-3.2.0';
 const el = id => document.getElementById(id);
 
 // 共有された事前入力リンクのQ01〜Q20に対応。
@@ -317,59 +359,32 @@ const GOOGLE_FORM = {
   url:'https://docs.google.com/forms/d/e/1FAIpQLSfai2e-Ta6zOmD0J3AuSjx0_updZ5QsvdSatWoEUk-W4z9ZxA/viewform',
   partialReady:true,
   entries:{
-    storeCode:'entry.346509662',
-    janCode:'entry.50409100',
-    minDisplay:'entry.2117060978',
-    orderUnit:'entry.961693137',
-    maxLTSales:'entry.1174672860',
-    salesFloorStock:'entry.336661373',
-    backroomStock:'entry.657907386',
-    inputMode:'entry.1911215740',
-    cumulativeOnly:'entry.918002987',
-    pendingOnly:'entry.361084175',
-    accumulated:'entry.1421737639',
-    currentCycle:'entry.855963683',
-    targetCycle:'entry.1611346263',
-    currentReserve:'entry.1026939516',
-    hhtValue:'entry.800324500',
-    calculatedAt:'entry.152212637',
-    recordId:'entry.569093665',
-    toolVersion:'entry.2126230404',
+    storeCode:'entry.346509662', janCode:'entry.50409100',
+    minDisplay:'entry.2117060978', orderUnit:'entry.961693137',
+    maxLTSales:'entry.1174672860', salesFloorStock:'entry.336661373',
+    backroomStock:'entry.657907386', inputMode:'entry.1911215740',
+    cumulativeOnly:'entry.918002987', pendingOnly:'entry.361084175',
+    accumulated:'entry.1421737639', currentCycle:'entry.855963683',
+    targetCycle:'entry.1611346263', currentReserve:'entry.1026939516',
+    hhtValue:'entry.800324500', calculatedAt:'entry.152212637',
+    recordId:'entry.569093665', toolVersion:'entry.2126230404',
     recordQuantity:'entry.2080564339',
     selectedFields:'entry.899615921'
   }
 };
 
 const HHT_FIELDS = [
-  'minDisplay',
-  'orderUnit',
-  'maxLTSales',
-  'salesFloorStock',
-  'backroomStock',
-  'accumulated'
+  'minDisplay','orderUnit','maxLTSales',
+  'salesFloorStock','backroomStock','accumulated'
 ];
 
 const COLLECTION_FIELDS = HHT_FIELDS.concat('recordQuantity');
 
 const BASE_FORM_KEYS = [
-  'storeCode',
-  'janCode',
-  'minDisplay',
-  'orderUnit',
-  'maxLTSales',
-  'salesFloorStock',
-  'backroomStock',
-  'inputMode',
-  'cumulativeOnly',
-  'pendingOnly',
-  'accumulated',
-  'currentCycle',
-  'targetCycle',
-  'currentReserve',
-  'hhtValue',
-  'calculatedAt',
-  'recordId',
-  'toolVersion'
+  'storeCode','janCode','minDisplay','orderUnit','maxLTSales',
+  'salesFloorStock','backroomStock','inputMode','cumulativeOnly',
+  'pendingOnly','accumulated','currentCycle','targetCycle',
+  'currentReserve','hhtValue','calculatedAt','recordId','toolVersion'
 ];
 
 const FIELD_INFO = {
@@ -427,12 +442,7 @@ let session = null;
 let currentSample = null;
 let sending = false;
 let readyHint = '読み取ると、選んだ項目の入力が始まります。';
-
-const wizard = {
-  steps:[],
-  index:0,
-  replaceNext:false
-};
+const wizard = {steps:[],index:0,replaceNext:false};
 
 function formatNumber(value) {
   return new Intl.NumberFormat('ja-JP').format(value);
@@ -445,8 +455,7 @@ function safeInteger(value,label) {
   return value;
 }
 
-// LT全体の最大販売数を直接使用。
-// 平均販売数や安全在庫は再加算しない。
+// LT全体の最大販売数を直接使用。平均販売数や安全在庫は再加算しない。
 function calculateModel(input) {
   HHT_FIELDS.forEach(key => {
     safeInteger(input[key],FIELD_INFO[key].label);
@@ -460,27 +469,22 @@ function calculateModel(input) {
     input.salesFloorStock + input.backroomStock,
     '在庫合計'
   );
-
   const current = safeInteger(
     stock + input.accumulated,
     '現在のサイクル合計'
   );
-
   const base = safeInteger(
     input.minDisplay + input.orderUnit,
     '最低陳列量＋発注単位'
   );
-
   const target = safeInteger(
     base + input.maxLTSales,
     '目標のサイクル合計'
   );
-
   const reserve = safeInteger(
     current - base,
     'LT販売への備え'
   );
-
   const delta = safeInteger(
     target - current,
     'HHT入力値'
@@ -490,9 +494,7 @@ function calculateModel(input) {
 }
 
 function chosenFields() {
-  return COLLECTION_FIELDS.filter(
-    key => el('choose-' + key).checked
-  );
+  return COLLECTION_FIELDS.filter(key => el('choose-' + key).checked);
 }
 
 function canCalculate(fields) {
@@ -504,11 +506,8 @@ function quantityOnly(fields) {
 }
 
 function deriveInventoryTotal(fields) {
-  return [
-    'recordQuantity',
-    'salesFloorStock',
-    'backroomStock'
-  ].every(key => fields.includes(key));
+  return ['recordQuantity','salesFloorStock','backroomStock']
+    .every(key => fields.includes(key));
 }
 
 function selectionLabel(fields) {
@@ -528,12 +527,8 @@ function selectionChanged() {
 
   el('presetHht').setAttribute(
     'aria-pressed',
-    String(
-      fields.length === HHT_FIELDS.length &&
-      canCalculate(fields)
-    )
+    String(fields.length === HHT_FIELDS.length && canCalculate(fields))
   );
-
   el('presetQuantity').setAttribute(
     'aria-pressed',
     String(quantityOnly(fields))
@@ -552,28 +547,26 @@ function selectionChanged() {
     (deriveInventoryTotal(fields)
       ? ' 在庫合計は売場＋BRから自動算出。'
       : '') +
-    (partial && !GOOGLE_FORM.partialReady ||
-      fields.includes('recordQuantity') &&
-      !GOOGLE_FORM.entries.recordQuantity
-      ? ' この組合せの送信はフォーム設定待ち。'
-      : '');
+    (
+      partial && !GOOGLE_FORM.partialReady ||
+      fields.includes('recordQuantity') && !GOOGLE_FORM.entries.recordQuantity
+        ? ' この組合せの送信はフォーム設定待ち。'
+        : ''
+    );
 }
 
 function setPreset(fields) {
   if (phase !== 'setup' || sending) return;
-
   COLLECTION_FIELDS.forEach(key => {
     el('choose-' + key).checked = fields.includes(key);
   });
-
   selectionChanged();
 }
 
 function setSubmissionStatus(message,problem = false) {
   ['submissionStatus','resultSubmissionStatus'].forEach(id => {
     el(id).textContent = message;
-    el(id).className =
-      'submission-status' + (problem ? ' problem' : '');
+    el(id).className = 'submission-status' + (problem ? ' problem' : '');
   });
 }
 
@@ -593,88 +586,61 @@ function renderApp() {
   el('scanActions').hidden = phase !== 'ready';
   el('draftActions').hidden = phase !== 'paused';
   el('reviewActions').hidden = !review;
-
   el('resumeResultActions').hidden =
     phase !== 'review' || el('resultDialog').open;
-
   el('resultClose').disabled = sending;
   el('settingsButton').hidden = phase !== 'ready';
 
   if (session) {
     el('sessionSummary').textContent =
-      '店番 ' + session.storeCode +
-      ' ｜ ' + selectionLabel(session.fields);
+      '店番 ' + session.storeCode + ' ｜ ' + selectionLabel(session.fields);
   }
 
   el('workTitle').textContent =
-    phase === 'ready'
-      ? 'バーコードをかざしてください'
-      : phase === 'paused'
-        ? '入力を中断しています'
-        : phase === 'input'
-          ? '入力中'
-          : phase === 'sending'
-            ? '送信中…'
-            : '結果を確認';
+    phase === 'ready' ? 'バーコードをかざしてください' :
+    phase === 'paused' ? '入力を中断しています' :
+    phase === 'input' ? '入力中' :
+    phase === 'sending' ? '送信中…' :
+    '結果を確認';
 
   el('activeJan').textContent =
     currentSample && currentSample.raw.janCode
       ? currentSample.raw.janCode
       : '';
 
-  el('resultContext').textContent =
-    currentSample
-      ? '店番 ' + currentSample.storeCode +
-        ' ｜ JAN ' + currentSample.raw.janCode
-      : '';
+  el('resultContext').textContent = currentSample
+    ? '店番 ' + currentSample.storeCode +
+      ' ｜ JAN ' + currentSample.raw.janCode
+    : '';
 
   el('workHint').textContent =
-    phase === 'ready'
-      ? readyHint
-      : phase === 'paused'
-        ? '入力済みの値は保持しています。'
-        : review
-          ? '修正する場合は「修正」を押してください。'
-          : '';
+    phase === 'ready' ? readyHint :
+    phase === 'paused' ? '入力済みの値は保持しています。' :
+    review ? '修正する場合は「修正」を押してください。' :
+    '';
 
-  const attempted = !!(
-    currentSample &&
-    currentSample.attempted
-  );
-
-  const config =
-    currentSample && currentSample.record
-      ? getSendConfig(currentSample)
-      : null;
+  const attempted = !!(currentSample && currentSample.attempted);
+  const config = currentSample && currentSample.record
+    ? getSendConfig(currentSample)
+    : null;
 
   el('sendButton').disabled =
-    sending ||
-    attempted ||
-    !config ||
-    config.state !== 'ready';
+    sending || attempted || !config || config.state !== 'ready';
 
   el('sendButton').textContent =
-    sending
-      ? '送信中…'
-      : attempted
-        ? '結果を確認'
-        : config && config.state !== 'ready'
-          ? 'フォーム設定待ち'
-          : '送信して次へ';
+    sending ? '送信中…' :
+    attempted ? '結果を確認' :
+    config && config.state !== 'ready' ? 'フォーム設定待ち' :
+    '送信して次へ';
 
   el('editSample').disabled = sending || attempted;
   el('discardSample').hidden = attempted;
-
-  el('nextAfterCheck').hidden =
-    !(phase === 'review' && attempted);
-
+  el('nextAfterCheck').hidden = !(phase === 'review' && attempted);
   el('nextAfterCheck').disabled = sending;
   el('recordMeta').hidden = !attempted;
-
-  el('recordMeta').textContent =
-    attempted
-      ? '確認用の記録ID：' + currentSample.recordId
-      : '';
+  el('recordMeta').textContent = attempted
+    ? '確認用の記録ID：' + currentSample.recordId
+    : '';
 
   if (attempted && phase === 'review') {
     el('workHint').textContent =
@@ -735,10 +701,7 @@ function makeRecordId() {
     window.crypto &&
     typeof window.crypto.getRandomValues === 'function'
   ) {
-    const bytes = window.crypto.getRandomValues(
-      new Uint8Array(16)
-    );
-
+    const bytes = window.crypto.getRandomValues(new Uint8Array(16));
     bytes[6] = (bytes[6] & 15) | 64;
     bytes[8] = (bytes[8] & 63) | 128;
 
@@ -761,11 +724,7 @@ function makeRecordId() {
   );
 }
 
-function sampleSteps(
-  sample,
-  includeJan = false,
-  includeDerived = false
-) {
+function sampleSteps(sample,includeJan = false,includeDerived = false) {
   const steps = includeJan ? ['janCode'] : [];
 
   sample.fields.forEach(key => {
@@ -773,14 +732,9 @@ function sampleSteps(
       key === 'recordQuantity' &&
       deriveInventoryTotal(sample.fields) &&
       !includeDerived
-    ) {
-      return;
-    }
+    ) return;
 
-    if (
-      key === 'accumulated' &&
-      sample.mode === 'separate'
-    ) {
+    if (key === 'accumulated' && sample.mode === 'separate') {
       steps.push('cumulativeOnly','pendingOnly');
     } else {
       steps.push(key);
@@ -791,15 +745,10 @@ function sampleSteps(
 }
 
 function startSample(code = '') {
-  if (phase !== 'ready' || sending || !session) {
-    return false;
-  }
+  if (phase !== 'ready' || sending || !session) return false;
 
   const entered = normalizeJan(code);
-
-  code = entered
-    ? normalizeJanForRecord(entered)
-    : '';
+  code = entered ? normalizeJanForRecord(entered) : '';
 
   if (entered && !code) return false;
 
@@ -832,28 +781,22 @@ function startSample(code = '') {
       error.message || '入力を開始できませんでした。',
       true
     );
-
     if (currentSample) setPhase('paused');
-
     return false;
   }
 }
 
 function validateValue(key,raw) {
   const info = FIELD_INFO[key];
-
-  const value = normalizeJan(raw)
-    .replace(/^[−－]/,'-');
+  const value = normalizeJan(raw).replace(/^[−－]/,'-');
 
   if (key === 'janCode') {
     const jan = normalizeJanForRecord(value);
-
     if (!jan) {
       throw new Error(
         'JANはチェックデジットが一致する8桁または13桁の数字で入力してください。'
       );
     }
-
     return jan;
   }
 
@@ -867,15 +810,9 @@ function validateValue(key,raw) {
     throw new Error('整数で入力してください。');
   }
 
-  const number = safeInteger(
-    Number(value),
-    info.label
-  );
+  const number = safeInteger(Number(value),info.label);
 
-  if (
-    info.min !== undefined &&
-    number < info.min
-  ) {
+  if (info.min !== undefined && number < info.min) {
     throw new Error(info.min + '以上で入力してください。');
   }
 
@@ -912,20 +849,13 @@ function paintWizard() {
   el('wizardHint').textContent = info.hint;
   el('wizardValue').value = currentSample.raw[key] || '';
   el('wizardValue').setAttribute('aria-label',info.label);
-
   el('wizardMinus').disabled =
-    key !== 'accumulated' &&
-    key !== 'cumulativeOnly';
-
+    key !== 'accumulated' && key !== 'cumulativeOnly';
   el('wizardBack').disabled = wizard.index === 0;
-
   el('wizardNext').textContent =
-    wizard.index === wizard.steps.length - 1
-      ? '結果を見る'
-      : '次へ';
+    wizard.index === wizard.steps.length - 1 ? '結果を見る' : '次へ';
 
   wizard.replaceNext = el('wizardValue').value !== '';
-
   wizardError();
 
   el('wizardValue').focus({preventScroll:true});
@@ -936,13 +866,7 @@ function paintWizard() {
 }
 
 function openWizard(steps,index) {
-  if (
-    !currentSample ||
-    currentSample.attempted ||
-    sending
-  ) {
-    return;
-  }
+  if (!currentSample || currentSample.attempted || sending) return;
 
   wizard.steps = steps;
   wizard.index = index;
@@ -972,10 +896,7 @@ function syncWizardDraft() {
 }
 
 function closeWizard() {
-  if (el('inputWizard').open) {
-    el('inputWizard').close();
-  }
-
+  if (el('inputWizard').open) el('inputWizard').close();
   syncDialogScrollLock();
 }
 
@@ -987,10 +908,7 @@ function syncDialogScrollLock() {
 }
 
 function closeResultDialog() {
-  if (el('resultDialog').open) {
-    el('resultDialog').close();
-  }
-
+  if (el('resultDialog').open) el('resultDialog').close();
   syncDialogScrollLock();
 }
 
@@ -1000,14 +918,11 @@ function openResultDialog() {
     sending ||
     !currentSample ||
     !currentSample.record
-  ) {
-    return;
-  }
+  ) return;
 
   closeWizard();
 
   const dialog = el('resultDialog');
-
   if (!dialog.open) dialog.showModal();
 
   syncDialogScrollLock();
@@ -1018,38 +933,22 @@ function openResultDialog() {
 }
 
 function pauseResultDialog() {
-  if (
-    phase !== 'review' ||
-    sending ||
-    !currentSample
-  ) {
-    return;
-  }
-
+  if (phase !== 'review' || sending || !currentSample) return;
   closeResultDialog();
   renderApp();
-
   el('resumeResult').focus({preventScroll:true});
 }
 
 function pauseWizard() {
   if (phase !== 'input' || sending) return;
-
   syncWizardDraft();
   closeWizard();
   setPhase('paused');
-
   el('resumeInput').focus({preventScroll:true});
 }
 
 function wizardKey(key) {
-  if (
-    phase !== 'input' ||
-    !currentSample ||
-    sending
-  ) {
-    return;
-  }
+  if (phase !== 'input' || !currentSample || sending) return;
 
   const field = wizard.steps[wizard.index];
   let value = el('wizardValue').value;
@@ -1057,30 +956,16 @@ function wizardKey(key) {
   if (key === 'clear') {
     value = '';
   } else if (key === 'backspace') {
-    value = wizard.replaceNext
-      ? ''
-      : value.slice(0,-1);
+    value = wizard.replaceNext ? '' : value.slice(0,-1);
   } else if (key === 'minus') {
-    if (
-      field !== 'accumulated' &&
-      field !== 'cumulativeOnly'
-    ) {
-      return;
-    }
-
-    value = value.startsWith('-')
-      ? value.slice(1)
-      : '-' + value;
+    if (field !== 'accumulated' && field !== 'cumulativeOnly') return;
+    value = value.startsWith('-') ? value.slice(1) : '-' + value;
   } else if (/^\d$/.test(key)) {
     if (wizard.replaceNext) value = '';
-
     if (
       value.replace('-','').length >=
       (field === 'janCode' ? 13 : 16)
-    ) {
-      return;
-    }
-
+    ) return;
     value += key;
   } else {
     return;
@@ -1088,29 +973,19 @@ function wizardKey(key) {
 
   wizard.replaceNext = false;
   el('wizardValue').value = value;
-
   syncWizardDraft();
   wizardError();
 }
 
 function wizardNext() {
-  if (
-    phase !== 'input' ||
-    !currentSample ||
-    sending
-  ) {
-    return;
-  }
+  if (phase !== 'input' || !currentSample || sending) return;
 
   syncWizardDraft();
-
   const key = wizard.steps[wizard.index];
 
   try {
-    currentSample.raw[key] = validateValue(
-      key,
-      currentSample.raw[key]
-    );
+    currentSample.raw[key] =
+      validateValue(key,currentSample.raw[key]);
 
     if (wizard.index < wizard.steps.length - 1) {
       wizard.index++;
@@ -1119,9 +994,7 @@ function wizardNext() {
       previewCurrentSample();
     }
   } catch (error) {
-    wizardError(
-      error.message || '入力値を確認してください。'
-    );
+    wizardError(error.message || '入力値を確認してください。');
   }
 }
 
@@ -1132,9 +1005,7 @@ function readSampleInput(sample) {
   };
 
   sampleSteps(sample).forEach(key => {
-    input[key] = Number(
-      validateValue(key,sample.raw[key] || '')
-    );
+    input[key] = Number(validateValue(key,sample.raw[key] || ''));
   });
 
   if (deriveInventoryTotal(sample.fields)) {
@@ -1175,15 +1046,12 @@ function buildRecord(sample,input,model) {
     }
   });
 
-  // JANは先頭の0を保持した13桁の文字列で送る。
   record.janCode = validateValue('janCode',input.janCode);
 
   record.inputMode =
-    input.mode === 'separate'
-      ? '内訳'
-      : input.mode === 'combined'
-        ? '合算'
-        : '';
+    input.mode === 'separate' ? '内訳' :
+    input.mode === 'combined' ? '合算' :
+    '';
 
   if (model) {
     record.currentCycle = String(model.current);
@@ -1199,51 +1067,37 @@ function buildRecord(sample,input,model) {
   record.recordId = sample.recordId;
   record.toolVersion = APP_VERSION;
 
-  record.selectedFields = ['JANコード']
-    .concat(
-      sampleSteps(sample,false,true)
-        .map(key => FIELD_INFO[key].label)
-    )
-    .join('、');
+  record.selectedFields = ['JANコード'].concat(
+    sampleSteps(sample,false,true).map(key => FIELD_INFO[key].label)
+  ).join('、');
 
   return Object.freeze(record);
 }
 
 function renderResult(sample) {
   const model = sample.model;
-
   el('resultValue').className = 'result-value';
 
   if (model) {
     const d = model.delta;
 
     el('resultTitle').textContent = 'HHT入力値';
-
     el('resultValue').className +=
-      d > 0
-        ? ' plus'
-        : d < 0
-          ? ' minus'
-          : ' zero';
+      d > 0 ? ' plus' :
+      d < 0 ? ' minus' :
+      ' zero';
 
     el('resultValue').textContent =
-      d > 0
-        ? '増数 ' + formatNumber(d) + ' 個'
-        : d < 0
-          ? '減数 ' + formatNumber(-d) + ' 個'
-          : '変更なし 0 個';
+      d > 0 ? '増数 ' + formatNumber(d) + ' 個' :
+      d < 0 ? '減数 ' + formatNumber(-d) + ' 個' :
+      '変更なし 0 個';
 
     el('resultExplanation').textContent =
-      'LT販売への備え ' +
-      formatNumber(model.reserve) +
-      ' → 想定 ' +
-      formatNumber(sample.input.maxLTSales) +
-      ' 個';
+      'LT販売への備え ' + formatNumber(model.reserve) +
+      ' → 想定 ' + formatNumber(sample.input.maxLTSales) + ' 個';
   } else {
     el('resultTitle').textContent =
-      quantityOnly(sample.fields)
-        ? '在庫合計'
-        : '入力内容';
+      quantityOnly(sample.fields) ? '在庫合計' : '入力内容';
 
     el('resultValue').textContent =
       quantityOnly(sample.fields)
@@ -1267,14 +1121,12 @@ function renderResult(sample) {
     dt.textContent =
       FIELD_INFO[key].label +
       (
-        key === 'recordQuantity' &&
-        deriveInventoryTotal(sample.fields)
+        key === 'recordQuantity' && deriveInventoryTotal(sample.fields)
           ? '〈自動〉'
           : ''
       );
 
-    dd.textContent =
-      formatNumber(sample.input[key]) + ' 個';
+    dd.textContent = formatNumber(sample.input[key]) + ' 個';
 
     row.appendChild(dt);
     row.appendChild(dd);
@@ -1285,17 +1137,10 @@ function renderResult(sample) {
 }
 
 function previewCurrentSample() {
-  if (
-    !currentSample ||
-    currentSample.attempted ||
-    sending
-  ) {
-    return;
-  }
+  if (!currentSample || currentSample.attempted || sending) return;
 
   const sample = currentSample;
   const input = readSampleInput(sample);
-
   const model = canCalculate(sample.fields)
     ? calculateModel(input)
     : null;
@@ -1323,7 +1168,6 @@ function previewCurrentSample() {
 function getFormConfig() {
   try {
     const url = new URL(GOOGLE_FORM.url);
-
     const entries = Object.entries(
       GOOGLE_FORM.entries
     ).filter(([,id]) => id !== '');
@@ -1331,7 +1175,8 @@ function getFormConfig() {
     if (
       url.protocol !== 'https:' ||
       url.hostname !== 'docs.google.com' ||
-      !/^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/(?:viewform|formResponse)\/?$/.test(url.pathname)
+      !/^\/forms\/(?:u\/\d+\/)?d\/(?:e\/)?[^/]+\/(?:viewform|formResponse)\/?$/
+        .test(url.pathname)
     ) {
       throw new Error();
     }
@@ -1340,9 +1185,7 @@ function getFormConfig() {
       BASE_FORM_KEYS.some(
         key => !/^entry\.\d+$/.test(GOOGLE_FORM.entries[key])
       ) ||
-      entries.some(
-        ([,id]) => !/^entry\.\d+$/.test(id)
-      ) ||
+      entries.some(([,id]) => !/^entry\.\d+$/.test(id)) ||
       new Set(entries.map(([,id]) => id)).size !== entries.length
     ) {
       throw new Error();
@@ -1352,15 +1195,10 @@ function getFormConfig() {
       /\/(?:viewform|formResponse)\/?$/,
       '/formResponse'
     );
-
     url.search = '';
     url.hash = '';
 
-    return {
-      state:'ready',
-      url:url.href,
-      entries
-    };
+    return {state:'ready',url:url.href,entries};
   } catch (_) {
     return {
       state:'invalid',
@@ -1371,7 +1209,6 @@ function getFormConfig() {
 
 function getSendConfig(sample) {
   const config = getFormConfig();
-
   if (config.state !== 'ready') return config;
 
   if (
@@ -1384,10 +1221,7 @@ function getSendConfig(sample) {
     };
   }
 
-  if (
-    !canCalculate(sample.fields) &&
-    !GOOGLE_FORM.partialReady
-  ) {
+  if (!canCalculate(sample.fields) && !GOOGLE_FORM.partialReady) {
     return {
       state:'partial',
       message:'選択項目だけの送信は、Googleフォームの必須設定を変更して接続した後に使えます。'
@@ -1412,7 +1246,6 @@ function finishSample(message = '',problem = false) {
 
   closeWizard();
   closeResultDialog();
-
   currentSample = null;
 
   readyHint =
@@ -1429,9 +1262,7 @@ async function sendSample() {
     !currentSample ||
     !currentSample.record ||
     currentSample.attempted
-  ) {
-    return 'ignored';
-  }
+  ) return 'ignored';
 
   const sample = currentSample;
   const config = getSendConfig(sample);
@@ -1463,7 +1294,6 @@ async function sendSample() {
 
   sending = true;
   sample.attempted = true;
-
   setPhase('sending');
 
   controls.forEach(([node]) => {
@@ -1472,11 +1302,7 @@ async function sendSample() {
 
   setSubmissionStatus('フォームへ送信しています。');
 
-  const timer = setTimeout(
-    () => controller.abort(),
-    15000
-  );
-
+  const timer = setTimeout(() => controller.abort(),15000);
   let outcome = 'unknown';
 
   try {
@@ -1487,7 +1313,6 @@ async function sendSample() {
       body,
       signal:controller.signal
     });
-
     outcome = 'processed';
   } catch (_) {
     // 到着済みの可能性があるため、自動再送しない。
@@ -1501,14 +1326,12 @@ async function sendSample() {
   }
 
   if (outcome === 'processed') {
-    // no-corsではGoogle側の受付可否を読み取れない。
     finishSample(
       'JAN ' + sample.input.janCode +
       '：送信処理済み。受付結果はGoogleフォームで確認してください。'
     );
   } else {
     setPhase('review');
-
     setSubmissionStatus(
       '送信結果不明。入力は保持しています。Googleフォームの回答を確認してください。',
       true
@@ -1529,20 +1352,14 @@ el('presetQuantity').addEventListener(
 );
 
 COLLECTION_FIELDS.forEach(key => {
-  el('choose-' + key).addEventListener(
-    'change',
-    selectionChanged
-  );
+  el('choose-' + key).addEventListener('change',selectionChanged);
 });
 
 ['modeCombined','modeSeparate'].forEach(id => {
   el(id).addEventListener('change',selectionChanged);
 });
 
-el('beginSession').addEventListener(
-  'click',
-  beginSession
-);
+el('beginSession').addEventListener('click',beginSession);
 
 el('storeCode').addEventListener('input',() => {
   el('setupError').hidden = true;
@@ -1556,43 +1373,30 @@ el('storeCode').addEventListener('keydown',event => {
   }
 });
 
-el('manualJan').addEventListener(
-  'click',
-  () => startSample()
-);
+el('manualJan').addEventListener('click',() => startSample());
 
 el('settingsButton').addEventListener('click',() => {
   if (phase !== 'ready' || sending) return;
-
   setPhase('setup');
   selectionChanged();
   setSubmissionStatus('');
 });
 
-el('wizardClose').addEventListener(
-  'click',
-  pauseWizard
-);
+el('wizardClose').addEventListener('click',pauseWizard);
 
 el('inputWizard').addEventListener('cancel',event => {
   event.preventDefault();
   pauseWizard();
 });
 
-el('resultClose').addEventListener(
-  'click',
-  pauseResultDialog
-);
+el('resultClose').addEventListener('click',pauseResultDialog);
 
 el('resultDialog').addEventListener('cancel',event => {
   event.preventDefault();
   pauseResultDialog();
 });
 
-el('resumeResult').addEventListener(
-  'click',
-  openResultDialog
-);
+el('resumeResult').addEventListener('click',openResultDialog);
 
 el('wizardClear').addEventListener(
   'click',
@@ -1606,20 +1410,10 @@ document.querySelectorAll('[data-key]').forEach(button => {
   );
 });
 
-el('wizardNext').addEventListener(
-  'click',
-  wizardNext
-);
+el('wizardNext').addEventListener('click',wizardNext);
 
 el('wizardBack').addEventListener('click',() => {
-  if (
-    phase !== 'input' ||
-    sending ||
-    wizard.index < 1
-  ) {
-    return;
-  }
-
+  if (phase !== 'input' || sending || wizard.index < 1) return;
   syncWizardDraft();
   wizard.index--;
   paintWizard();
@@ -1631,9 +1425,7 @@ el('inputWizard').addEventListener('keydown',event => {
     event.ctrlKey ||
     event.metaKey ||
     event.altKey
-  ) {
-    return;
-  }
+  ) return;
 
   if (event.key === 'Enter' && event.repeat) {
     event.preventDefault();
@@ -1643,10 +1435,7 @@ el('inputWizard').addEventListener('keydown',event => {
   if (/^\d$/.test(event.key)) {
     event.preventDefault();
     wizardKey(event.key);
-  } else if (
-    event.key === '-' ||
-    event.key === '−'
-  ) {
+  } else if (event.key === '-' || event.key === '−') {
     event.preventDefault();
     wizardKey('minus');
   } else if (event.key === 'Backspace') {
@@ -1673,38 +1462,25 @@ el('wizardValue').addEventListener('paste',event => {
     event.clipboardData.getData('text')
   ).replace(/^[−－]/,'-');
 
-  if (
-    !/^-?\d*$/.test(value) ||
-    value.length > 17
-  ) {
+  if (!/^-?\d*$/.test(value) || value.length > 17) {
     wizardError('数字を貼り付けてください。');
     return;
   }
 
   el('wizardValue').value = value;
   wizard.replaceNext = false;
-
   syncWizardDraft();
   wizardError();
 });
 
 el('resumeInput').addEventListener('click',() => {
-  if (
-    phase !== 'paused' ||
-    sending ||
-    !currentSample
-  ) {
-    return;
-  }
+  if (phase !== 'paused' || sending || !currentSample) return;
 
   try {
     openWizard(
       wizard.steps.length
         ? wizard.steps
-        : sampleSteps(
-            currentSample,
-            !currentSample.raw.janCode
-          ),
+        : sampleSteps(currentSample,!currentSample.raw.janCode),
       wizard.index
     );
   } catch (error) {
@@ -1718,17 +1494,12 @@ el('editSample').addEventListener('click',() => {
     sending ||
     !currentSample ||
     currentSample.attempted
-  ) {
-    return;
-  }
+  ) return;
 
   currentSample.record = null;
 
   try {
-    openWizard(
-      sampleSteps(currentSample,true),
-      0
-    );
+    openWizard(sampleSteps(currentSample,true),0);
   } catch (error) {
     setPhase('paused');
     setSubmissionStatus(error.message,true);
@@ -1742,9 +1513,7 @@ el('editSample').addEventListener('click',() => {
       !currentSample ||
       currentSample.attempted ||
       !['paused','review'].includes(phase)
-    ) {
-      return;
-    }
+    ) return;
 
     finishSample(
       '入力を破棄しました。店番と入力項目の設定は保持しています。'
@@ -1763,32 +1532,23 @@ el('nextAfterCheck').addEventListener('click',() => {
   }
 });
 
-el('sendButton').addEventListener(
-  'click',
-  sendSample
-);
+el('sendButton').addEventListener('click',sendSample);
 
-// カメラ・JAN読み取り。
-// 入力中・結果表示中は映像を保持して、読み取りだけを停止する。
+
+// カメラ・バーコード読み取り
 
 function normalizeJan(value) {
-  return String(value)
-    .trim()
-    .replace(
-      /[０-９]/g,
-      character => String(
-        character.charCodeAt(0) - 0xFF10
-      )
-    );
+  return String(value).trim().replace(
+    /[０-９]/g,
+    character => String(character.charCodeAt(0) - 0xFF10)
+  );
 }
 
 function isValidJan(value) {
   if (
     !/^(?:\d{8}|\d{13})$/.test(value) ||
     /^0+$/.test(value)
-  ) {
-    return false;
-  }
+  ) return false;
 
   let sum = 0;
 
@@ -1800,20 +1560,14 @@ function isValidJan(value) {
     sum += Number(value[i]) * weight;
   }
 
-  return (
-    (10 - sum % 10) % 10 ===
-    Number(value[value.length - 1])
-  );
+  return (10 - sum % 10) % 10 === Number(value[value.length - 1]);
 }
 
-// 有効な8桁JANを記録用の13文字へ揃える。
-// 7桁や9桁などの誤読はゼロ埋めで補完しない。
+// 有効な8桁JANだけを13文字へ統一。
+// 任意の桁不足や誤読をゼロで埋めて受け入れることはしない。
 function normalizeJanForRecord(value) {
   const code = normalizeJan(value);
-
-  return isValidJan(code)
-    ? code.padStart(13,'0')
-    : '';
+  return isValidJan(code) ? code.padStart(13,'0') : '';
 }
 
 const janScanner = {
@@ -1821,31 +1575,394 @@ const janScanner = {
   decodeEpoch:0,
   active:false,
   ready:false,
-
   stream:null,
   decoder:null,
   pending:null,
   restartRequested:false,
-
   userPaused:true,
   blocked:false,
   timer:null,
   readingTask:null,
-
   previousCode:'',
   previousAt:0,
   streak:0,
   lastFrameTime:-1,
-
   lastFrameAt:0,
   startedAt:0,
-
   message:'入力する項目を選んで「開始・カメラ起動」を押してください。',
   problem:false,
   scanHint:''
 };
 
 let zxingLoadPromise = null;
+
+const cameraPreferences = {
+  deviceId:'',
+  quality:'high'
+};
+
+let cameraControls = null;
+
+function getJanVideoConstraints() {
+  const high = cameraPreferences.quality === 'high';
+
+  const constraints = {
+    width:{ideal:high ? 3840 : 1920},
+    height:{ideal:high ? 2160 : 1080},
+    frameRate:{ideal:30}
+  };
+
+  if (cameraPreferences.deviceId) {
+    constraints.deviceId = {exact:cameraPreferences.deviceId};
+  } else {
+    constraints.facingMode = {ideal:'environment'};
+  }
+
+  try {
+    if (navigator.mediaDevices.getSupportedConstraints().resizeMode) {
+      constraints.resizeMode = {ideal:'none'};
+    }
+  } catch (_) {
+    // 任意のカメラ機能。
+  }
+
+  return constraints;
+}
+
+function readJanTrackSettings(track) {
+  try {
+    return track.getSettings() || {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function isCurrentJanControl(control) {
+  return !!control &&
+    cameraControls === control &&
+    janScanner.active &&
+    control.token === janScanner.generation &&
+    janScanner.stream &&
+    janScanner.stream.getVideoTracks().includes(control.track);
+}
+
+function janCameraRange(range) {
+  return !!range &&
+    Number.isFinite(range.min) &&
+    Number.isFinite(range.max) &&
+    range.max > range.min;
+}
+
+function janTorchSupported(capabilities) {
+  return capabilities.torch === true ||
+    (
+      Array.isArray(capabilities.torch) &&
+      capabilities.torch.includes(true)
+    );
+}
+
+function refreshCameraControls() {
+  const control = cameraControls;
+
+  if (!isCurrentJanControl(control)) {
+    [
+      'cameraZoomRow',
+      'cameraManualFocusRow',
+      'cameraFocus',
+      'cameraTorch'
+    ].forEach(id => {
+      el(id).hidden = true;
+    });
+
+    el('cameraDevice').disabled = !!janScanner.pending || !!sending;
+    el('cameraQuality').disabled = !!janScanner.pending || !!sending;
+    el('cameraInfo').textContent =
+      'カメラ停止中。設定は次の起動時に反映されます。';
+
+    return;
+  }
+
+  control.settings = readJanTrackSettings(control.track);
+
+  const capabilities = control.capabilities;
+  const settings = control.settings;
+  const modes = Array.isArray(capabilities.focusMode)
+    ? capabilities.focusMode
+    : [];
+
+  const canAdjust =
+    typeof control.track.applyConstraints === 'function';
+  const disabled = !!control.busy || !!sending;
+
+  el('cameraQuality').value = cameraPreferences.quality;
+  el('cameraQuality').disabled = disabled;
+  el('cameraDevice').disabled = disabled;
+
+  el('cameraFocus').hidden =
+    !canAdjust ||
+    !modes.some(
+      mode => mode === 'continuous' || mode === 'single-shot'
+    );
+  el('cameraFocus').disabled = disabled;
+
+  el('cameraTorch').hidden =
+    !canAdjust || !janTorchSupported(capabilities);
+  el('cameraTorch').disabled = disabled;
+
+  const torch = settings.torch === undefined
+    ? !!control.adjustments.torch
+    : !!settings.torch;
+
+  el('cameraTorch').setAttribute('aria-pressed',String(torch));
+  el('cameraTorch').textContent = torch ? 'ライト ON' : 'ライト OFF';
+
+  const configureRange = (
+    id,rowId,valueId,range,value,suffix
+  ) => {
+    const available = canAdjust && janCameraRange(range);
+    el(rowId).hidden = !available;
+    if (!available) return;
+
+    const slider = el(id);
+
+    slider.min = String(range.min);
+    slider.max = String(range.max);
+    slider.step = String(
+      Number.isFinite(range.step) && range.step > 0
+        ? range.step
+        : (range.max - range.min) / 100
+    );
+
+    const current = Number.isFinite(value)
+      ? Math.min(range.max,Math.max(range.min,value))
+      : range.min;
+
+    slider.value = String(current);
+    slider.disabled = disabled;
+
+    el(valueId).textContent =
+      String(Number(current.toFixed(2))) + suffix;
+  };
+
+  configureRange(
+    'cameraZoom',
+    'cameraZoomRow',
+    'cameraZoomValue',
+    capabilities.zoom,
+    settings.zoom === undefined
+      ? control.adjustments.zoom
+      : settings.zoom,
+    '×'
+  );
+
+  configureRange(
+    'cameraManualFocus',
+    'cameraManualFocusRow',
+    'cameraFocusValue',
+    modes.includes('manual') ? capabilities.focusDistance : null,
+    settings.focusDistance === undefined
+      ? control.adjustments.focusDistance
+      : settings.focusDistance,
+    ''
+  );
+
+  const video = el('janVideo');
+  const width = video.videoWidth || settings.width;
+  const height = video.videoHeight || settings.height;
+
+  const modeNames = {
+    'continuous':'自動ピント',
+    'single-shot':'1回ピント調整',
+    'manual':'手動ピント',
+    'none':'ピント制御なし'
+  };
+
+  el('cameraInfo').textContent =
+    (
+      width && height
+        ? '実映像 ' + width + ' × ' + height + ' px'
+        : '映像の画質を確認中'
+    ) +
+    ' ／ ' +
+    (modeNames[settings.focusMode] || 'ピント設定は端末側');
+}
+
+async function refreshJanCameraDevices(control) {
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.enumerateDevices
+  ) return;
+
+  try {
+    const devices = (
+      await navigator.mediaDevices.enumerateDevices()
+    ).filter(
+      device => device.kind === 'videoinput' && device.deviceId
+    );
+
+    if (!isCurrentJanControl(control)) return;
+
+    const select = el('cameraDevice');
+    select.replaceChildren();
+
+    const automatic = document.createElement('option');
+    automatic.value = '';
+    automatic.textContent = '背面（自動）';
+    select.appendChild(automatic);
+
+    devices.forEach((device,index) => {
+      const option = document.createElement('option');
+      option.value = device.deviceId;
+      option.textContent = device.label || 'カメラ ' + (index + 1);
+      select.appendChild(option);
+    });
+
+    select.value = cameraPreferences.deviceId;
+    el('cameraDeviceRow').hidden = devices.length < 2;
+  } catch (_) {
+    // カメラ一覧が取得できなくても現在の映像は使い続ける。
+  }
+}
+
+async function applyJanCameraChange(patch,successText = '') {
+  const control = cameraControls;
+
+  if (
+    !isCurrentJanControl(control) ||
+    typeof control.track.applyConstraints !== 'function' ||
+    sending
+  ) return false;
+
+  const requested = {...patch};
+
+  control.busy++;
+  resetJanReading();
+  refreshCameraControls();
+
+  const task = control.queue.catch(() => {}).then(async () => {
+    if (!isCurrentJanControl(control)) return false;
+
+    const next = {...control.adjustments,...requested};
+
+    if (next.focusMode && next.focusMode !== 'manual') {
+      delete next.focusDistance;
+    }
+
+    // 他の調整値や解像度・カメラ指定を失わないようにまとめて適用。
+    await control.track.applyConstraints({
+      ...control.baseConstraints,
+      advanced:[next]
+    });
+
+    if (!isCurrentJanControl(control)) return false;
+
+    control.adjustments = next;
+    control.settings = readJanTrackSettings(control.track);
+
+    const ignored = Object.keys(requested).some(key => {
+      if (control.settings[key] === undefined) return false;
+
+      return typeof requested[key] === 'number'
+        ? Math.abs(control.settings[key] - requested[key]) > 0.05
+        : control.settings[key] !== requested[key];
+    });
+
+    el('cameraControlStatus').textContent = ignored
+      ? '端末が設定を反映していない項目があります。映像を確認してください。'
+      : successText;
+
+    return true;
+  }).catch(() => {
+    if (isCurrentJanControl(control)) {
+      el('cameraControlStatus').textContent =
+        'この設定は適用できませんでした。現在の映像で読み取りを続けられます。';
+    }
+    return false;
+  }).finally(() => {
+    control.busy = Math.max(0,control.busy - 1);
+
+    if (isCurrentJanControl(control)) {
+      refreshCameraControls();
+      if (!control.busy) resetJanReading();
+    }
+  });
+
+  control.queue = task;
+  return task;
+}
+
+async function configureJanTrack(track,token,baseConstraints) {
+  let capabilities = {};
+
+  try {
+    capabilities = track.getCapabilities() || {};
+  } catch (_) {
+    // この場合は端末側の自動調整に任せる。
+  }
+
+  const control = {
+    track,
+    token,
+    capabilities,
+    settings:readJanTrackSettings(track),
+    baseConstraints,
+    adjustments:{},
+    queue:Promise.resolve(),
+    busy:0
+  };
+
+  cameraControls = control;
+  el('cameraControlStatus').textContent = '';
+
+  refreshCameraControls();
+  void refreshJanCameraDevices(control);
+
+  const modes = Array.isArray(capabilities.focusMode)
+    ? capabilities.focusMode
+    : [];
+
+  if (modes.includes('continuous')) {
+    await applyJanCameraChange({focusMode:'continuous'});
+  } else if (modes.includes('single-shot')) {
+    await applyJanCameraChange({focusMode:'single-shot'});
+  }
+}
+
+async function requestJanFocus() {
+  const control = cameraControls;
+  if (!isCurrentJanControl(control)) return;
+
+  const modes = control.capabilities.focusMode || [];
+  const mode =
+    modes.includes('continuous') ? 'continuous' :
+    modes.includes('single-shot') ? 'single-shot' :
+    '';
+
+  if (mode) {
+    await applyJanCameraChange(
+      {focusMode:mode},
+      '自動ピントの設定を要求しました。映像が鮮明になる距離で合わせてください。'
+    );
+  }
+}
+
+async function switchJanCamera() {
+  if (sending || janScanner.pending) return;
+
+  cameraPreferences.deviceId = el('cameraDevice').value;
+  cameraPreferences.quality =
+    el('cameraQuality').value === 'standard'
+      ? 'standard'
+      : 'high';
+
+  if (janScanner.userPaused && !janScanner.active) return;
+
+  janScanner.userPaused = false;
+  janScanner.blocked = false;
+
+  stopJanCamera();
+  await startJanCamera(true);
+}
 
 function setJanStatus(message,problem = false) {
   janScanner.message = message;
@@ -1854,10 +1971,7 @@ function setJanStatus(message,problem = false) {
 }
 
 function updateCameraUI() {
-  const waiting =
-    janScanner.active ||
-    janScanner.restartRequested;
-
+  const waiting = janScanner.active || janScanner.restartRequested;
   const live =
     janScanner.active &&
     janScanner.ready &&
@@ -1871,22 +1985,40 @@ function updateCameraUI() {
 
   placeholder.hidden = live;
 
+  el('cameraOptions').hidden =
+    !live && !janScanner.startedAt;
+
+  el('cameraDevice').disabled =
+    !!janScanner.pending ||
+    !!sending ||
+    !!(cameraControls && cameraControls.busy);
+
+  el('cameraQuality').disabled = el('cameraDevice').disabled;
+
   if (live) {
     if (!janScanner.decoder) {
       state = '映像表示中';
       hint = hint || '読み取り機能を準備しています。';
+    } else if (
+      phase === 'ready' &&
+      !sending &&
+      (
+        el('cameraOptions').open ||
+        (cameraControls && cameraControls.busy)
+      )
+    ) {
+      state = 'カメラ調整中';
+      hint = '調整を閉じるとJANの読み取りを再開します。';
     } else if (phase === 'ready' && !sending) {
       state = 'JAN読み取り中';
-
       hint =
         janScanner.scanHint ||
         hint ||
-        'バーコード全体を枠内へ';
+        '左右の白い余白を含めて枠内へ。ぼける時は少し離してください。';
     } else {
-      state =
-        sending || phase === 'sending'
-          ? '送信中・映像表示'
-          : '映像表示・読み取り待機';
+      state = sending || phase === 'sending'
+        ? '送信中・映像表示'
+        : '映像表示・読み取り待機';
 
       const pausedHints = {
         setup:'入力項目を選び、開始してください。',
@@ -1896,8 +2028,7 @@ function updateCameraUI() {
         sending:'送信処理中です。'
       };
 
-      hint =
-        hint ||
+      hint = hint ||
         pausedHints[phase] ||
         'バーコードの読み取りを待機しています。';
     }
@@ -1910,53 +2041,38 @@ function updateCameraUI() {
       ? 'カメラの許可を確認しています'
       : 'カメラを準備しています';
 
-    hint =
-      hint ||
+    hint = hint ||
       '確認が出たらカメラを許可してください。JANの手入力も利用できます。';
   } else {
     placeholder.textContent = janScanner.blocked
       ? 'カメラを利用できません'
       : 'カメラ停止中';
 
-    hint =
-      hint ||
+    hint = hint ||
       'カメラを起動するか、JANを手入力してください。';
   }
 
   el('cameraState').textContent = state;
 
   const hintNode = el('cameraHint');
+  if (hintNode.textContent !== hint) hintNode.textContent = hint;
 
-  if (hintNode.textContent !== hint) {
-    hintNode.textContent = hint;
-  }
-
-  hintNode.classList.toggle(
-    'problem',
-    janScanner.problem
-  );
-
+  hintNode.classList.toggle('problem',janScanner.problem);
   toggle.disabled = !!sending;
 
   const label =
-    waiting
-      ? 'カメラ停止'
-      : janScanner.blocked
-        ? 'カメラ再試行'
-        : janScanner.userPaused && janScanner.startedAt > 0
-          ? 'カメラ再開'
-          : 'カメラ起動';
+    waiting ? 'カメラ停止' :
+    janScanner.blocked ? 'カメラ再試行' :
+    janScanner.userPaused && janScanner.startedAt > 0
+      ? 'カメラ再開'
+      : 'カメラ起動';
 
-  if (toggle.textContent !== label) {
-    toggle.textContent = label;
-  }
-
+  if (toggle.textContent !== label) toggle.textContent = label;
   toggle.setAttribute('aria-label',label);
 }
 
 function disposeJanDecoder(decoder) {
   if (!decoder || decoder.disposed) return;
-
   decoder.disposed = true;
 
   if (decoder.compatibility) {
@@ -1967,9 +2083,13 @@ function disposeJanDecoder(decoder) {
   if (decoder.reader) {
     try {
       decoder.reader.reset();
-    } catch (_) {
-      // 解放済みの場合は何もしない。
-    }
+    } catch (_) {}
+  }
+
+  if (decoder.labelReader) {
+    try {
+      decoder.labelReader.reset();
+    } catch (_) {}
   }
 }
 
@@ -1980,16 +2100,16 @@ function clearJanStreak() {
 }
 
 function canReadJan(token,epoch) {
-  return (
-    janScanner.active &&
+  return janScanner.active &&
     janScanner.ready &&
     !!janScanner.decoder &&
     token === janScanner.generation &&
     epoch === janScanner.decodeEpoch &&
     phase === 'ready' &&
     !sending &&
-    !document.hidden
-  );
+    !document.hidden &&
+    !el('cameraOptions').open &&
+    !(cameraControls && cameraControls.busy);
 }
 
 function scheduleJanFrame(token,epoch,delay = 180) {
@@ -2034,10 +2154,9 @@ function resetJanReading() {
 }
 
 function stopJanCamera(message = '',problem = false) {
-  // 許可確認中のリクエストは保持し、重複要求を防ぐ。
+  // 未解決のカメラ許可要求は保持し、要求の重複を防ぐ。
   janScanner.generation++;
   janScanner.decodeEpoch++;
-
   janScanner.active = false;
   janScanner.ready = false;
   janScanner.restartRequested = false;
@@ -2049,20 +2168,22 @@ function stopJanCamera(message = '',problem = false) {
   janScanner.scanHint = '';
 
   const stream = janScanner.stream;
+
   janScanner.stream = null;
+  cameraControls = null;
+
+  refreshCameraControls();
 
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
   }
 
   const video = el('janVideo');
-
   video.pause();
   video.srcObject = null;
 
   disposeJanDecoder(janScanner.decoder);
   janScanner.decoder = null;
-
   janScanner.message = message;
   janScanner.problem = problem;
 
@@ -2070,10 +2191,7 @@ function stopJanCamera(message = '',problem = false) {
 }
 
 function loadZxing() {
-  if (
-    window.ZXing &&
-    window.ZXing.MultiFormatReader
-  ) {
+  if (window.ZXing && window.ZXing.MultiFormatReader) {
     return Promise.resolve(window.ZXing);
   }
 
@@ -2085,10 +2203,9 @@ function loadZxing() {
 
     const finish = error => {
       if (finished) return;
-
       finished = true;
-      clearTimeout(timeout);
 
+      clearTimeout(timeout);
       script.onload = null;
       script.onerror = null;
 
@@ -2109,7 +2226,6 @@ function loadZxing() {
       'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
 
     script.async = true;
-
     script.integrity =
       'sha384-BzBxP10ZE72aitqj5UMmUsbKFliP/DZqA8Wq+BNNhlIJDGoEd1tpkMYXOg9+n6sB';
 
@@ -2124,10 +2240,7 @@ function loadZxing() {
       );
     };
 
-    script.onerror = () => {
-      finish({name:'JanLibraryError'});
-    };
-
+    script.onerror = () => finish({name:'JanLibraryError'});
     document.head.appendChild(script);
   }).catch(error => {
     zxingLoadPromise = null;
@@ -2137,72 +2250,86 @@ function loadZxing() {
   return zxingLoadPromise;
 }
 
+const JAN_NATIVE_FORMATS = [
+  'ean_13',
+  'ean_8',
+  'code_128',
+  'code_39',
+  'itf'
+];
+
 async function createJanDecoder(preferNative = true) {
-  if (
-    preferNative &&
-    'BarcodeDetector' in window
-  ) {
+  if (preferNative && 'BarcodeDetector' in window) {
     try {
-      const formats =
+      const supported =
         await window.BarcodeDetector.getSupportedFormats();
 
       if (
         ['ean_13','ean_8'].every(
-          format => formats.includes(format)
+          format => supported.includes(format)
         )
       ) {
+        const formats = JAN_NATIVE_FORMATS.filter(
+          format => supported.includes(format)
+        );
+
         return {
           kind:'native',
-
-          detector:new window.BarcodeDetector({
-            formats:['ean_13','ean_8']
-          }),
-
+          detector:new window.BarcodeDetector({formats}),
+          formats,
           disposed:false,
           misses:0,
           compatibility:null,
           compatibilityPromise:null,
           compatibilityAttempted:false,
-          compatibilityFailed:false
+          compatibilityFailed:false,
+          diagnostic:''
         };
       }
     } catch (_) {
-      // 標準方式を使えない場合は互換方式へ。
+      // 互換デコーダーへ切り替える。
     }
   }
 
   const Z = await loadZxing();
-  const hints = new Map();
 
-  hints.set(
-    Z.DecodeHintType.POSSIBLE_FORMATS,
-    [
-      Z.BarcodeFormat.EAN_13,
-      Z.BarcodeFormat.EAN_8
-    ]
-  );
+  const eanFormats = [
+    Z.BarcodeFormat.EAN_13,
+    Z.BarcodeFormat.EAN_8
+  ];
 
-  hints.set(
-    Z.DecodeHintType.TRY_HARDER,
-    true
-  );
+  const allFormats = [
+    ...eanFormats,
+    Z.BarcodeFormat.CODE_128,
+    Z.BarcodeFormat.CODE_39,
+    Z.BarcodeFormat.ITF
+  ];
+
+  const makeReader = formats => {
+    const hints = new Map([
+      [Z.DecodeHintType.POSSIBLE_FORMATS,formats],
+      [Z.DecodeHintType.TRY_HARDER,true]
+    ]);
+
+    const reader = new Z.MultiFormatReader();
+    reader.setHints(hints);
+    return reader;
+  };
 
   return {
     kind:'zxing',
     Z,
-    hints,
-    reader:new Z.MultiFormatReader(),
-    disposed:false
+    reader:makeReader(eanFormats),
+    labelReader:makeReader(allFormats),
+    allFormats,
+    variant:0,
+    disposed:false,
+    diagnostic:''
   };
 }
 
 function prepareJanCompatibility(decoder) {
-  if (
-    decoder.disposed ||
-    decoder.compatibilityAttempted
-  ) {
-    return;
-  }
+  if (decoder.disposed || decoder.compatibilityAttempted) return;
 
   decoder.compatibilityAttempted = true;
 
@@ -2212,7 +2339,6 @@ function prepareJanCompatibility(decoder) {
         disposeJanDecoder(fallback);
         return;
       }
-
       decoder.compatibility = fallback;
     })
     .catch(() => {
@@ -2225,72 +2351,113 @@ function prepareJanCompatibility(decoder) {
     });
 }
 
-async function decodeJanCanvas(decoder,canvas) {
-  if (!decoder || decoder.disposed) return [];
+function collectDecodedJan(decoder,values) {
+  const accepted = [];
 
-  if (decoder.kind === 'native') {
-    const found = await decoder.detector.detect(canvas);
+  for (const value of values) {
+    const code = normalizeJan(value);
 
-    if (decoder.disposed) return [];
-
-    const codes = found
-      .filter(item =>
-        item.format === 'ean_13' ||
-        item.format === 'ean_8'
-      )
-      .map(item => item.rawValue);
-
-    if (
-      codes.some(
-        code => isValidJan(normalizeJan(code))
-      )
-    ) {
-      decoder.misses = 0;
-      return codes;
+    // プライスカードに独自の商品番号が入っている場合もある。
+    // JANの部分切り出しや桁数の推測は行わない。
+    if (isValidJan(code)) {
+      accepted.push(code);
+    } else {
+      decoder.diagnostic =
+        'バーコードは読めましたが、JANの桁数・チェックが一致しません。カードのJANを確認してください。';
     }
-
-    decoder.misses = Math.min(
-      4,
-      decoder.misses + 1
-    );
-
-    if (decoder.misses >= 4) {
-      prepareJanCompatibility(decoder);
-    }
-
-    if (decoder.compatibility) {
-      try {
-        return await decodeJanCanvas(
-          decoder.compatibility,
-          canvas
-        );
-      } catch (_) {
-        disposeJanDecoder(decoder.compatibility);
-        decoder.compatibility = null;
-        decoder.compatibilityFailed = true;
-      }
-    }
-
-    return codes;
   }
 
-  const {Z,reader,hints} = decoder;
+  return [...new Set(accepted)];
+}
+
+function janVariantSource(Z,source,variant) {
+  if (variant === 0) return source;
+  if (variant === 2) return source.invert();
+
+  const rotate = variant === 4;
+
+  const transformed = new class extends Z.LuminanceSource {
+    constructor() {
+      super(
+        rotate ? source.getHeight() : source.getWidth(),
+        rotate ? source.getWidth() : source.getHeight()
+      );
+    }
+
+    getRow(y,row) {
+      const width = this.getWidth();
+
+      if (!row || row.length < width) {
+        row = new Uint8ClampedArray(width);
+      }
+
+      if (rotate) {
+        const pixels = source.getMatrix();
+        const originalWidth = source.getWidth();
+
+        for (let x = 0; x < width; x++) {
+          row[x] =
+            pixels[x * originalWidth + originalWidth - 1 - y];
+        }
+      } else {
+        row = source.getRow(y,row);
+
+        let low = 255;
+        let high = 0;
+
+        for (let x = 0; x < width; x++) {
+          low = Math.min(low,row[x]);
+          high = Math.max(high,row[x]);
+        }
+
+        // ほぼ一様な画像のノイズを過剰に強調しない。
+        if (high - low >= 12 && high - low < 220) {
+          const scale = 255 / (high - low);
+
+          for (let x = 0; x < width; x++) {
+            row[x] = Math.round((row[x] - low) * scale);
+          }
+        }
+      }
+
+      return row;
+    }
+
+    getMatrix() {
+      const width = this.getWidth();
+      const height = this.getHeight();
+      const matrix = new Uint8ClampedArray(width * height);
+
+      let row = null;
+
+      for (let y = 0; y < height; y++) {
+        row = this.getRow(y,row);
+        matrix.set(row.subarray(0,width),y * width);
+      }
+
+      return matrix;
+    }
+
+    invert() {
+      return new Z.InvertedLuminanceSource(this);
+    }
+  }();
+
+  return variant === 3 ? transformed.invert() : transformed;
+}
+
+function tryJanZxing(decoder,reader,source) {
+  const {Z} = decoder;
 
   try {
-    const source =
-      new Z.HTMLCanvasElementLuminanceSource(canvas);
-
     const bitmap = new Z.BinaryBitmap(
-      new Z.HybridBinarizer(source)
+      new Z.GlobalHistogramBinarizer(source)
     );
 
-    const result = reader.decode(bitmap,hints);
+    const result = reader.decodeWithState(bitmap);
 
-    return [
-      Z.BarcodeFormat.EAN_13,
-      Z.BarcodeFormat.EAN_8
-    ].includes(result.getBarcodeFormat())
-      ? [result.getText()]
+    return decoder.allFormats.includes(result.getBarcodeFormat())
+      ? collectDecodedJan(decoder,[result.getText()])
       : [];
   } catch (error) {
     if (
@@ -2300,11 +2467,88 @@ async function decodeJanCanvas(decoder,canvas) {
     ) {
       return [];
     }
-
     throw error;
   } finally {
     reader.reset();
   }
+}
+
+async function decodeJanCanvas(decoder,canvas) {
+  if (!decoder || decoder.disposed) return [];
+
+  decoder.diagnostic = '';
+
+  if (decoder.kind === 'native') {
+    const found = await decoder.detector.detect(canvas);
+    if (decoder.disposed) return [];
+
+    const codes = collectDecodedJan(
+      decoder,
+      found.filter(
+        item => decoder.formats.includes(item.format)
+      ).map(item => item.rawValue)
+    );
+
+    if (codes.length) {
+      decoder.misses = 0;
+      return codes;
+    }
+
+    decoder.misses = Math.min(4,decoder.misses + 1);
+
+    if (decoder.misses >= 4) {
+      prepareJanCompatibility(decoder);
+    }
+
+    if (decoder.compatibility) {
+      try {
+        const compatible = await decodeJanCanvas(
+          decoder.compatibility,
+          canvas
+        );
+
+        decoder.diagnostic =
+          decoder.compatibility.diagnostic || decoder.diagnostic;
+
+        return compatible;
+      } catch (_) {
+        disposeJanDecoder(decoder.compatibility);
+        decoder.compatibility = null;
+        decoder.compatibilityFailed = true;
+      }
+    }
+
+    return [];
+  }
+
+  const {Z} = decoder;
+
+  const luminance =
+    new Z.HTMLCanvasElementLuminanceSource(canvas).getMatrix();
+
+  const source = new Z.RGBLuminanceSource(
+    luminance,
+    canvas.width,
+    canvas.height
+  );
+
+  // 先にEANを探し、別の番号を持つラベルに隠されにくくする。
+  const ean = tryJanZxing(decoder,decoder.reader,source);
+  if (ean.length) return ean;
+
+  // 追加の解析は1フレームにつき1回。
+  // 成功した方法は次フレームでも使い、2回確認につなげる。
+  const extra = tryJanZxing(
+    decoder,
+    decoder.labelReader,
+    janVariantSource(Z,source,decoder.variant)
+  );
+
+  if (!extra.length) {
+    decoder.variant = (decoder.variant + 1) % 5;
+  }
+
+  return extra;
 }
 
 function captureJanFrame() {
@@ -2320,22 +2564,17 @@ function captureJanFrame() {
   const vw = video.videoWidth;
   const vh = video.videoHeight;
 
-  // 実際に表示している中央範囲を解析する。
-  // 赤い横線はDOMの重ね表示なので解析画像には入らない。
+  // object-fit:coverで見えている範囲と一致させる。
+  // 赤い線は映像とは別要素なので解析画像に入らない。
   const sw = Math.min(vw,vh * ratio);
   const sh = sw / ratio;
   const sx = (vw - sw) / 2;
   const sy = (vh - sh) / 2;
 
-  const cw = Math.max(
-    1,
-    Math.round(Math.min(sw,1920))
-  );
-
-  const ch = Math.max(
-    1,
-    Math.round(cw / ratio)
-  );
+  // 元映像の画素を可能な限り残す。低解像度映像の拡大はしない。
+  const scale = Math.min(1,3840 / sw,2160 / sh);
+  const cw = Math.max(1,Math.floor(sw * scale));
+  const ch = Math.max(1,Math.floor(sh * scale));
 
   if (canvas.width !== cw) canvas.width = cw;
   if (canvas.height !== ch) canvas.height = ch;
@@ -2345,15 +2584,10 @@ function captureJanFrame() {
     {willReadFrequently:true}
   );
 
-  if (!context) {
-    throw {name:'JanCaptureError'};
-  }
+  if (!context) throw {name:'JanCaptureError'};
 
-  context.drawImage(
-    video,
-    sx,sy,sw,sh,
-    0,0,cw,ch
-  );
+  context.imageSmoothingEnabled = false;
+  context.drawImage(video,sx,sy,sw,sh,0,0,cw,ch);
 
   return canvas;
 }
@@ -2385,7 +2619,6 @@ async function readJanFrame(token,epoch) {
       janScanner.lastFrameAt = Date.now();
 
       const canvas = captureJanFrame();
-
       let decoder = janScanner.decoder;
       let codes;
 
@@ -2393,14 +2626,9 @@ async function readJanFrame(token,epoch) {
         codes = await decodeJanCanvas(decoder,canvas);
       } catch (error) {
         if (!canReadJan(token,epoch)) return;
+        if (decoder.kind !== 'native') throw error;
 
-        if (decoder.kind !== 'native') {
-          throw error;
-        }
-
-        setJanStatus(
-          '互換用の読み取り機能を準備しています。'
-        );
+        setJanStatus('互換用の読み取り機能を準備しています。');
 
         const fallback = await createJanDecoder(false);
 
@@ -2410,7 +2638,6 @@ async function readJanFrame(token,epoch) {
         }
 
         disposeJanDecoder(decoder);
-
         janScanner.decoder = fallback;
         decoder = fallback;
 
@@ -2424,16 +2651,12 @@ async function readJanFrame(token,epoch) {
 
       const unique = [
         ...new Set(
-          codes
-            .map(normalizeJanForRecord)
-            .filter(Boolean)
+          codes.map(normalizeJanForRecord).filter(Boolean)
         )
       ];
 
       const now = Date.now();
 
-      // 直前に記録したJANとの比較は行わない。
-      // 同じ商品でも、新しい入力として受け付ける。
       if (unique.length === 1) {
         const code = unique[0];
 
@@ -2441,14 +2664,13 @@ async function readJanFrame(token,epoch) {
 
         janScanner.streak =
           code === janScanner.previousCode &&
-          now - janScanner.previousAt < 1500
+          now - janScanner.previousAt < 4000
             ? janScanner.streak + 1
             : 1;
 
         janScanner.previousCode = code;
         janScanner.previousAt = now;
 
-        // 1回の読み取り内では、異なる2フレームで番号を確認する。
         if (janScanner.streak >= 2) {
           clearJanStreak();
 
@@ -2463,10 +2685,9 @@ async function readJanFrame(token,epoch) {
       } else {
         clearJanStreak();
 
-        janScanner.scanHint =
-          unique.length > 1
-            ? 'バーコードを1つだけ枠内に入れてください。'
-            : '';
+        janScanner.scanHint = unique.length > 1
+          ? 'バーコードを1つだけ枠内に入れてください。'
+          : (decoder.diagnostic || '');
       }
 
       updateCameraUI();
@@ -2478,11 +2699,7 @@ async function readJanFrame(token,epoch) {
   } catch (error) {
     if (canReadJan(token,epoch)) {
       janScanner.blocked = true;
-
-      stopJanCamera(
-        cameraErrorText(error),
-        true
-      );
+      stopJanCamera(cameraErrorText(error),true);
     }
   } finally {
     if (janScanner.readingTask === task) {
@@ -2542,9 +2759,7 @@ function mayRestartJanCamera() {
     janScanner.userPaused ||
     janScanner.blocked ||
     document.hidden
-  ) {
-    return;
-  }
+  ) return;
 
   janScanner.restartRequested = false;
   void startJanCamera(false);
@@ -2556,9 +2771,7 @@ async function startJanCamera(manual = false) {
     document.hidden ||
     janScanner.userPaused ||
     janScanner.active
-  ) {
-    return;
-  }
+  ) return;
 
   if (!manual && janScanner.blocked) {
     updateCameraUI();
@@ -2569,11 +2782,9 @@ async function startJanCamera(manual = false) {
 
   if (janScanner.pending) {
     janScanner.restartRequested = true;
-
     setJanStatus(
       '先に開いたカメラの許可確認を待っています。JANの手入力も利用できます。'
     );
-
     return;
   }
 
@@ -2598,8 +2809,7 @@ async function startJanCamera(manual = false) {
     }
 
     const policy =
-      document.permissionsPolicy ||
-      document.featurePolicy;
+      document.permissionsPolicy || document.featurePolicy;
 
     if (
       policy &&
@@ -2616,13 +2826,11 @@ async function startJanCamera(manual = false) {
       throw {name:'JanUnavailableError'};
     }
 
+    const videoConstraints = getJanVideoConstraints();
+
     request = navigator.mediaDevices.getUserMedia({
       audio:false,
-      video:{
-        facingMode:{ideal:'environment'},
-        width:{ideal:1920},
-        height:{ideal:1080}
-      }
+      video:videoConstraints
     });
 
     janScanner.pending = request;
@@ -2656,7 +2864,6 @@ async function startJanCamera(manual = false) {
           janScanner.active
         ) {
           janScanner.blocked = true;
-
           stopJanCamera(
             'カメラが停止しました。「カメラ再試行」で再開できます。',
             true
@@ -2674,13 +2881,9 @@ async function startJanCamera(manual = false) {
     try {
       await video.play();
     } catch (error) {
-      if (
-        error &&
-        error.name === 'NotAllowedError'
-      ) {
+      if (error && error.name === 'NotAllowedError') {
         throw {name:'JanAutoplayError'};
       }
-
       throw error;
     }
 
@@ -2688,11 +2891,22 @@ async function startJanCamera(manual = false) {
       !janScanner.active ||
       token !== janScanner.generation ||
       janScanner.stream !== stream
-    ) {
-      return;
-    }
+    ) return;
 
     janScanner.ready = true;
+
+    await configureJanTrack(
+      stream.getVideoTracks()[0],
+      token,
+      videoConstraints
+    );
+
+    if (
+      !janScanner.active ||
+      token !== janScanner.generation ||
+      janScanner.stream !== stream
+    ) return;
+
     setJanStatus('読み取り機能を準備しています。');
 
     const decoder = await createJanDecoder();
@@ -2724,26 +2938,16 @@ async function startJanCamera(manual = false) {
 
     if (token === janScanner.generation) {
       janScanner.blocked = true;
-
-      stopJanCamera(
-        cameraErrorText(error),
-        true
-      );
+      stopJanCamera(cameraErrorText(error),true);
     } else if (
       denied &&
       !janScanner.userPaused &&
       !janScanner.active
     ) {
-      setJanStatus(
-        cameraErrorText(error),
-        true
-      );
+      setJanStatus(cameraErrorText(error),true);
     }
   } finally {
-    if (
-      request &&
-      janScanner.pending === request
-    ) {
+    if (request && janScanner.pending === request) {
       janScanner.pending = null;
     }
 
@@ -2761,22 +2965,91 @@ function toggleJanCamera() {
     (janScanner.pending && !janScanner.userPaused)
   ) {
     janScanner.userPaused = true;
-
     stopJanCamera(
       'カメラを停止しました。入力は続けられます。'
     );
   } else {
     janScanner.userPaused = false;
     janScanner.blocked = false;
-
     void startJanCamera(true);
   }
 }
 
-el('cameraToggle').addEventListener(
-  'click',
-  toggleJanCamera
+el('cameraToggle').addEventListener('click',toggleJanCamera);
+
+el('cameraOptions').addEventListener('toggle',() => {
+  refreshCameraControls();
+  resetJanReading();
+});
+
+el('janVideo').addEventListener(
+  'resize',
+  refreshCameraControls
 );
+
+el('cameraDevice').addEventListener('change',() => {
+  void switchJanCamera();
+});
+
+el('cameraQuality').addEventListener('change',() => {
+  void switchJanCamera();
+});
+
+el('cameraFocus').addEventListener('click',() => {
+  void requestJanFocus();
+});
+
+el('cameraZoom').addEventListener('input',event => {
+  el('cameraZoomValue').textContent =
+    Number(event.target.value).toFixed(2) + '×';
+});
+
+el('cameraZoom').addEventListener('change',event => {
+  if (
+    cameraControls &&
+    janCameraRange(cameraControls.capabilities.zoom)
+  ) {
+    void applyJanCameraChange(
+      {zoom:Number(event.target.value)},
+      'ズーム設定を要求しました。'
+    );
+  }
+});
+
+el('cameraManualFocus').addEventListener('input',event => {
+  el('cameraFocusValue').textContent =
+    String(Number(event.target.value));
+});
+
+el('cameraManualFocus').addEventListener('change',event => {
+  if (
+    cameraControls &&
+    janCameraRange(cameraControls.capabilities.focusDistance)
+  ) {
+    void applyJanCameraChange(
+      {
+        focusMode:'manual',
+        focusDistance:Number(event.target.value)
+      },
+      '手動ピントの設定を要求しました。'
+    );
+  }
+});
+
+el('cameraTorch').addEventListener('click',() => {
+  if (
+    cameraControls &&
+    janTorchSupported(cameraControls.capabilities)
+  ) {
+    void applyJanCameraChange(
+      {
+        torch:
+          el('cameraTorch').getAttribute('aria-pressed') !== 'true'
+      },
+      'ライト設定を要求しました。反射が増える時はOFFにしてください。'
+    );
+  }
+});
 
 document.addEventListener('visibilitychange',() => {
   if (document.hidden) {
@@ -2791,10 +3064,9 @@ document.addEventListener('visibilitychange',() => {
   }
 });
 
-window.addEventListener(
-  'pagehide',
-  () => stopJanCamera()
-);
+window.addEventListener('pagehide',() => {
+  stopJanCamera();
+});
 
 window.addEventListener('pageshow',() => {
   if (
