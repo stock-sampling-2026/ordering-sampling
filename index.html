@@ -308,7 +308,7 @@
 <script>
 'use strict';
 
-const APP_VERSION = 'ordering-sampling-3.7.0';
+const APP_VERSION = 'ordering-sampling-3.8.0';
 const el = id => document.getElementById(id);
 // 共有された事前入力リンクのQ01〜Q20に対応。
 // 部分記録を使う場合、GoogleフォームのQ03〜Q15は必須OFFにする。
@@ -819,7 +819,9 @@ const janScanner = {
 };
 let zxingLoadPromise = null;
 const cameraPreferences = {deviceId:'',quality:'standard'};
-// Only explicit user zoom choices, keyed to an identified camera for this page.
+const DEFAULT_START_ZOOM = 2;
+// Explicit user zoom choices are remembered per identified camera for this page.
+// If there is no user choice yet, startup tries 2× (or the nearest supported value below 2×).
 const janZoomChoices = new Map();
 let cameraControls = null;
 
@@ -1105,7 +1107,7 @@ async function applyJanCameraChange(patch,successText = '',options = {}) {
 
 async function configureJanTrack(track,token,baseConstraints) {
   const capabilities = readJanTrackCapabilities(track), settings = readJanTrackSettings(track);
-  // Preserve a reported device default; do not invent or remember a startup 1×.
+  // Start from the device-reported setting, then apply the 2× startup preference below when supported.
   const adjustments = Number.isFinite(settings.zoom) && settings.zoom > 0 ? {zoom:settings.zoom} : {};
   const control = {track,token,capabilities,settings,baseConstraints,
     adjustments,queue:Promise.resolve(),busy:0,focusSequence:0,focusSetupTimer:null,
@@ -1116,12 +1118,20 @@ async function configureJanTrack(track,token,baseConstraints) {
   refreshCameraControls();
   void refreshJanCameraDevices(control);
   const focusSequence = control.focusSequence;
+  const zoomRange = janZoomRange(control);
   if (control.zoomKey && janZoomChoices.has(control.zoomKey)) {
-    // Restore once before delayed AF setup; the same camera may expose a new
-    // zoom range at another resolution. Keep the original user choice cached.
+    // Restore an explicit user choice before AF setup.
     await requestJanZoom(janZoomChoices.get(control.zoomKey),{restore:true});
+  } else if (zoomRange) {
+    // Startup default: prefer 2×. If this camera cannot reach 2×, use the
+    // highest supported zoom below 2×. If its minimum is already above 2×,
+    // keep that minimum rather than forcing an even stronger zoom.
+    const startupZoom = zoomRange.min > DEFAULT_START_ZOOM
+      ? zoomRange.min
+      : Math.min(DEFAULT_START_ZOOM,zoomRange.maximum);
+    await requestJanZoom(startupZoom,{restore:true});
   }
-  // A manual focus choice queued during zoom restoration takes precedence.
+  // A manual focus choice queued during zoom setup takes precedence.
   if (!isCurrentJanControl(control) || control.focusSequence !== focusSequence ||
       control.adjustments.focusMode === 'manual') return;
   const modes = Array.isArray(capabilities.focusMode) ? capabilities.focusMode : [];
