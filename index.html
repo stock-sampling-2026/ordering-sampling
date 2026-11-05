@@ -22,8 +22,8 @@
     .sr-only { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0; }
     .shell, #cameraPanel { width:100%; max-width:480px; margin:0 auto; padding:0 max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left)); }
     .panel { margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:8px; background:#fff; }
-    .camera-viewport { position:relative; width:100%; height:clamp(132px,44vw,180px); overflow:hidden; border-top:1px solid #466787; border-bottom:1px solid #466787; border-left:0; border-right:0; border-radius:0; background:#152230; isolation:isolate; }
-    body:has(#setupPanel:not([hidden])) .camera-viewport { height:100px; }
+    .camera-viewport { position:relative; width:100%; height:auto; aspect-ratio:16 / 9; overflow:hidden; border-top:1px solid #466787; border-bottom:1px solid #466787; border-left:0; border-right:0; border-radius:0; background:#152230; isolation:isolate; }
+    body:has(#setupPanel:not([hidden])) .camera-viewport { height:100px; aspect-ratio:auto; }
     .camera-zoom { min-width:0; margin:5px 0 0; padding:3px 6px 0; border:1px solid var(--line); border-radius:6px; background:#fff; }
     .camera-zoom-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; }
     .camera-zoom-value { flex:1 1 80px; min-width:0; font-size:11px; color:var(--muted); overflow-wrap:anywhere; }
@@ -166,7 +166,7 @@
         <p id="decoderInfo" class="camera-control-status"></p>
         <p>調整を閉じると読み取り再開。ぼける時は少し離し、バーコード左右の白い余白も枠内に入れてください。</p>
         <label class="camera-setting" id="cameraDeviceRow"><span>カメラ</span><select id="cameraDevice"><option value="">背面（自動）</option></select></label>
-        <label class="camera-setting"><span>画質</span><select id="cameraQuality"><option value="high">高画質（4K優先）</option><option value="standard">標準（フルHD優先）</option></select></label>
+        <label class="camera-setting"><span>解像度</span><select id="cameraQuality"><option value="standard">標準（フルHD優先）</option><option value="high">細部優先（4K優先）</option></select></label>
         <div id="cameraManualFocusRow" hidden>
           <label class="camera-range-label" for="cameraManualFocus"><span>手動ピント</span><span id="cameraFocusValue"></span></label>
           <input type="range" id="cameraManualFocus" min="0" max="1" step="0.01" value="0">
@@ -308,7 +308,7 @@
 <script>
 'use strict';
 
-const APP_VERSION = 'ordering-sampling-3.6.0';
+const APP_VERSION = 'ordering-sampling-3.7.0';
 const el = id => document.getElementById(id);
 // 共有された事前入力リンクのQ01〜Q20に対応。
 // 部分記録を使う場合、GoogleフォームのQ03〜Q15は必須OFFにする。
@@ -818,7 +818,7 @@ const janScanner = {
   lastFrameAt:0, startedAt:0, message:'入力する項目を選んで「開始・カメラ起動」を押してください。', problem:false, scanHint:''
 };
 let zxingLoadPromise = null;
-const cameraPreferences = {deviceId:'',quality:'high'};
+const cameraPreferences = {deviceId:'',quality:'standard'};
 // Only explicit user zoom choices, keyed to an identified camera for this page.
 const janZoomChoices = new Map();
 let cameraControls = null;
@@ -1166,7 +1166,7 @@ async function requestJanFocus() {
 async function switchJanCamera() {
   if (sending || janScanner.pending) return;
   cameraPreferences.deviceId = el('cameraDevice').value;
-  cameraPreferences.quality = el('cameraQuality').value === 'standard' ? 'standard' : 'high';
+  cameraPreferences.quality = el('cameraQuality').value === 'high' ? 'high' : 'standard';
   if (janScanner.userPaused && !janScanner.active) return;
   janScanner.userPaused = false;
   janScanner.blocked = false;
@@ -1465,9 +1465,17 @@ function createJanWasmClient() {
 
 function getJanDecoderLabel(decoder) {
   if (!decoder) return '準備中';
-  if (decoder.kind === 'zxing') return '標準（互換）';
-  if (decoder.wasmReady) return '高精度';
-  return decoder.wasmFailed ? '標準（互換）' : '高精度準備中';
+  if (decoder.kind === 'zxing') return '互換読取（JS）';
+  if (decoder.detector) {
+    const source = decoder.nativeInput === 'canvas' ? '画像経由' : '映像直接';
+    const assist = decoder.wasmReady ? 'WASM補助' : decoder.wasmFailed ?
+      decoder.legacy ? '互換補助' : decoder.legacyFailed ? '補助利用不可' : '互換補助準備中' : 'WASM補助準備中';
+    return '端末読取（' + source + '）／' + assist;
+  }
+  if (decoder.wasmReady) return 'WASM読取';
+  if (decoder.wasmFailed) return decoder.legacy ? '互換読取（JS）' :
+    decoder.legacyFailed ? '読取利用不可' : '互換読取準備中';
+  return 'WASM準備中';
 }
 
 function notifyJanDecoderChanged(decoder) {
@@ -1489,7 +1497,8 @@ function ensureJanLegacy(decoder) {
 async function createJanDecoder(preferNative = true) {
   const decoder = {kind:'hybrid',disposed:false,detector:null,formats:[],wasm:null,
     wasmPromise:null,wasmReady:false,wasmFailed:false,legacy:null,legacyPromise:null,
-    diagnostic:'',lastReadStrong:false,readEpoch:0,wasmTask:null,wasmResult:null};
+    diagnostic:'',lastReadStrong:false,readEpoch:0,wasmTask:null,wasmResult:null,
+    nativeInput:'video',lastAssistAt:null};
   if (preferNative && 'BarcodeDetector' in window) {
     try {
       const supported = await window.BarcodeDetector.getSupportedFormats();
@@ -1504,11 +1513,14 @@ async function createJanDecoder(preferNative = true) {
     }).catch(async () => {
       if (decoder.disposed) return;
       decoder.wasmFailed = true; notifyJanDecoderChanged(decoder);
-      try { await ensureJanLegacy(decoder); } catch (_) { decoder.legacyFailed = true; }
+      try { await ensureJanLegacy(decoder); }
+      catch (_) { decoder.legacyFailed = true; notifyJanDecoderChanged(decoder); }
     });
   } catch (_) {
     decoder.wasmFailed = true;
-    decoder.wasmPromise = ensureJanLegacy(decoder).catch(() => { decoder.legacyFailed = true; });
+    decoder.wasmPromise = ensureJanLegacy(decoder).catch(() => {
+      decoder.legacyFailed = true; notifyJanDecoderChanged(decoder);
+    });
   }
   return decoder;
 }
@@ -1541,14 +1553,15 @@ function parseJanWasmResult(found) {
   return {codes,strong:codes.length === 1,diagnostic:parsed.diagnostic};
 }
 
-function takeJanWasmResult(decoder,canvas,frameContext,background) {
+function takeJanWasmResult(decoder,dimensions,frameContext,background) {
   const result = decoder.wasmResult;
   decoder.wasmResult = null;
   if (!result || decoder.disposed || result.epoch !== (decoder.readEpoch || 0) ||
-      result.width !== canvas.width || result.height !== canvas.height) return null;
+      result.width !== dimensions.width || result.height !== dimensions.height) return null;
   if (frameContext && result.frameContext &&
       (result.frameContext.generation !== frameContext.generation ||
-       result.frameContext.epoch !== frameContext.epoch)) return null;
+       result.frameContext.epoch !== frameContext.epoch ||
+       result.frameContext.geometryKey !== frameContext.geometryKey)) return null;
   if (background && (Date.now() - result.capturedAt < 0 ||
       Date.now() - result.capturedAt > 1000)) return null;
   return result;
@@ -1583,22 +1596,105 @@ function startJanWasmRead(decoder,canvas,frameContext) {
   return task;
 }
 
-async function decodeJanCanvas(decoder,canvas,frameContext = null) {
+function janNativeBounds(item) {
+  const box = item && item.boundingBox;
+  if (box && [box.x,box.y,box.width,box.height].every(Number.isFinite) &&
+      box.width > 0 && box.height > 0) return {x:box.x,y:box.y,width:box.width,height:box.height};
+  const points = item && item.cornerPoints;
+  if (!Array.isArray(points) || points.length < 4 ||
+      !points.every(point => point && Number.isFinite(point.x) && Number.isFinite(point.y))) return null;
+  const xs = points.map(point => point.x), ys = points.map(point => point.y);
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const width = Math.max(...xs) - x, height = Math.max(...ys) - y;
+  return width > 0 && height > 0 ? {x,y,width,height} : null;
+}
+
+function janNativeInPreview(box,geometry) {
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  return x >= geometry.sx && x <= geometry.sx + geometry.sw &&
+    y >= geometry.sy && y <= geometry.sy + geometry.sh;
+}
+
+function janAssistDue(decoder) {
+  return decoder.lastAssistAt === null || !Number.isFinite(decoder.lastAssistAt) ||
+    Date.now() < decoder.lastAssistAt || Date.now() - decoder.lastAssistAt >= 400;
+}
+
+// Live video is tried directly by the native engine. Canvas callers remain
+// usable for software fallback and standalone image verification.
+async function decodeJanCanvas(decoder,canvas,frameContext = null,video = null) {
   if (!decoder || decoder.disposed) return [];
   const invocationEpoch = decoder.readEpoch || 0;
+  const geometry = video ? getJanFrameGeometry(video) : null;
+  const dimensions = geometry || {width:canvas.width,height:canvas.height};
+  const context = video ? {...frameContext,capturedAt:frameContext && Number.isFinite(frameContext.capturedAt) ?
+    frameContext.capturedAt : Date.now(),geometryKey:geometry.key} : frameContext;
+  const current = (checkAge = false) => !decoder.disposed && invocationEpoch === (decoder.readEpoch || 0) &&
+    (!video || (video.readyState >= 2 && sameJanFrameGeometry(geometry,video))) && (!checkAge || !context ||
+      (Date.now() - context.capturedAt >= 0 && Date.now() - context.capturedAt <= 1000));
+  const getCanvas = () => {
+    if (!current()) return null;
+    if (!canvas) {
+      // A native attempt may have awaited another frame. Timestamp the fresh
+      // crop when it is actually copied, not when the native request began.
+      canvas = captureJanFrame(geometry);
+      if (context) context.capturedAt = Date.now();
+    }
+    return canvas;
+  };
   decoder.lastReadStrong = false;
   decoder.diagnostic = '';
-  if (decoder.kind === 'zxing') return decodeLegacyJanCanvas(decoder,canvas);
+  if (decoder.kind === 'zxing') {
+    const input = getCanvas();
+    return input ? decodeLegacyJanCanvas(decoder,input) : [];
+  }
   if (decoder.detector) {
-    try {
-      const found = await decoder.detector.detect(canvas);
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
+    let found = null;
+    if (video && decoder.nativeInput !== 'canvas') {
+      try {
+        found = await decoder.detector.detect(video);
+        if (!current(true)) return [];
+        if (!Array.isArray(found)) throw {name:'JanNativeResultError'};
+        const relevant = found.filter(item => decoder.formats.includes(item.format));
+        const located = relevant.map(item => ({item,box:janNativeBounds(item)}));
+        if (located.some(value => !value.box)) {
+          // Unknown locations cannot be accepted from the full camera image:
+          // use the same detector on the visible crop before accepting digits.
+          found = null;
+        } else found = located.filter(value => janNativeInPreview(value.box,geometry)).map(value => value.item);
+      } catch (error) {
+        if (!current(true)) return [];
+        // A frame can briefly disappear while the camera is still healthy.
+        // Keep the direct path for the next fresh frame in that case.
+        if (error && error.name === 'InvalidStateError') return [];
+        found = null;
+      }
+    }
+    if (found === null) {
+      const input = getCanvas();
+      if (!input) return [];
+      try {
+        found = await decoder.detector.detect(input);
+        if (!current(!!video)) return [];
+        if (!Array.isArray(found)) throw {name:'JanNativeResultError'};
+        if (video && decoder.nativeInput !== 'canvas') {
+          decoder.nativeInput = 'canvas';
+          notifyJanDecoderChanged(decoder);
+        }
+      } catch (error) {
+        if (!current(!!video)) return [];
+        if (error && error.name === 'InvalidStateError') return [];
+        found = null;
+        decoder.detector = null;
+        notifyJanDecoderChanged(decoder);
+      }
+    }
+    if (found) {
       const relevant = found.filter(item => decoder.formats.includes(item.format));
       const codes = collectDecodedJan(decoder,relevant.map(item => item.rawValue));
       if (codes.length) {
         // New native evidence supersedes any older worker image, including an
-        // ambiguous native result. Native EAN already validates its check digit;
-        // also validate its exact length and checksum here before single-hit use.
+        // ambiguous native result. Native EAN also needs exact length/checksum.
         invalidateJanDecoderResults(decoder);
         decoder.lastReadStrong = codes.length === 1 && relevant.some(item => {
           const code = normalizeJan(item.rawValue);
@@ -1608,38 +1704,42 @@ async function decodeJanCanvas(decoder,canvas,frameContext = null) {
         });
         return codes;
       }
-    } catch (_) {
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
-      decoder.detector = null;
     }
   }
+  if (!current()) return [];
   if (decoder.wasmReady) {
     if (decoder.detector) {
-      // Probe native on every fresh frame. A slow worker never blocks that loop.
-      const ready = takeJanWasmResult(decoder,canvas,frameContext,true);
+      // Native sees each fresh frame. Finished assistance can be consumed at
+      // any time; the cadence limits new pixel copies, not result delivery.
+      const ready = takeJanWasmResult(decoder,dimensions,context,true);
       if (ready && ready.codes.length) {
         decoder.lastReadStrong = ready.strong;
         decoder.diagnostic = ready.diagnostic || decoder.diagnostic;
         return ready.codes;
       }
       if (ready) decoder.diagnostic = ready.diagnostic || decoder.diagnostic;
-      startJanWasmRead(decoder,canvas,frameContext);
+      if (!decoder.wasmTask && janAssistDue(decoder)) {
+        const input = getCanvas();
+        if (!input) return [];
+        decoder.lastAssistAt = Date.now();
+        startJanWasmRead(decoder,input,context);
+      }
       return [];
     }
-    // Without native support, keep the bounded, awaited worker path. If native
-    // failed while an image was in flight, finish that owned task first.
+    // Without native support, use the bounded awaited worker path without the
+    // assist cadence. An old owned task must settle before a fresh copy starts.
     const existing = decoder.wasmTask;
     if (existing) await existing.promise;
-    if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
-    let ready = takeJanWasmResult(decoder,canvas,frameContext,true);
-    // Do not queue a frame captured before waiting for an old task. The next
-    // camera iteration obtains a genuinely fresh image after that wait.
+    if (!current()) return [];
+    let ready = takeJanWasmResult(decoder,dimensions,context,true);
     if (existing && !ready && decoder.wasmReady) return [];
     if (!ready && decoder.wasmReady) {
-      const task = startJanWasmRead(decoder,canvas,frameContext);
+      const input = getCanvas();
+      if (!input) return [];
+      const task = startJanWasmRead(decoder,input,context);
       if (task) await task.promise;
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
-      ready = takeJanWasmResult(decoder,canvas,frameContext,false);
+      if (!current()) return [];
+      ready = takeJanWasmResult(decoder,dimensions,context,false);
     }
     if (ready) {
       decoder.lastReadStrong = ready.strong;
@@ -1649,23 +1749,29 @@ async function decodeJanCanvas(decoder,canvas,frameContext = null) {
   }
   if (decoder.wasmFailed) {
     if (decoder.detector && !decoder.legacy) {
-      ensureJanLegacy(decoder).catch(() => { if (!decoder.disposed) decoder.legacyFailed = true; });
+      ensureJanLegacy(decoder).catch(() => {
+        if (!decoder.disposed) { decoder.legacyFailed = true; notifyJanDecoderChanged(decoder); }
+      });
       if (!decoder.diagnostic && !decoder.legacyFailed) decoder.diagnostic = '補助の読み取りを準備しています。カメラはそのまま使えます。';
       return [];
     }
+    if (decoder.detector && !janAssistDue(decoder)) return [];
     try {
       const legacy = await ensureJanLegacy(decoder);
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0) || !legacy) return [];
-      const codes = await decodeLegacyJanCanvas(legacy,canvas);
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
+      if (!current() || !legacy) return [];
+      const input = getCanvas();
+      if (!input) return [];
+      if (decoder.detector) decoder.lastAssistAt = Date.now();
+      const codes = await decodeLegacyJanCanvas(legacy,input);
+      if (!current()) return [];
       decoder.diagnostic = legacy.diagnostic || decoder.diagnostic;
       return codes;
     } catch (_) {
-      if (decoder.disposed || invocationEpoch !== (decoder.readEpoch || 0)) return [];
+      if (!current()) return [];
       if (!decoder.detector) throw {name:'JanLibraryError'};
     }
   } else if (!decoder.diagnostic) {
-    decoder.diagnostic = '高精度の読み取りを準備しています。映像はそのまま使えます。';
+    decoder.diagnostic = '補助の読み取りを準備しています。映像はそのまま使えます。';
   }
   return [];
 }
@@ -1767,23 +1873,39 @@ async function decodeLegacyJanCanvas(decoder,canvas) {
   return extra;
 }
 
-function captureJanFrame() {
-  const video = el('janVideo'), viewport = el('cameraViewport'), canvas = el('janCanvas');
-  const ratio = viewport.clientWidth && viewport.clientHeight ? viewport.clientWidth / viewport.clientHeight : 3.5;
+function getJanFrameGeometry(video = el('janVideo')) {
+  const viewport = el('cameraViewport');
+  const viewportWidth = viewport.clientWidth, viewportHeight = viewport.clientHeight;
+  const ratio = viewportWidth && viewportHeight ? viewportWidth / viewportHeight : 3.5;
   const vw = video.videoWidth, vh = video.videoHeight;
-  // Match the centered object-fit:cover preview; the red DOM line is excluded.
+  if (![vw,vh,ratio].every(Number.isFinite) || vw <= 0 || vh <= 0 || ratio <= 0) throw {name:'JanCaptureError'};
+  // The native engine sees the full video. This rectangle identifies what the
+  // user sees in the centered object-fit:cover preview and gates acceptance.
   const sw = Math.min(vw,vh * ratio), sh = sw / ratio;
   const sx = (vw - sw) / 2, sy = (vh - sh) / 2;
-  // Keep small bars at source resolution instead of reducing a 4K frame to 1920.
-  // Never enlarge low-resolution input; enlargement cannot restore lost detail.
   const scale = Math.min(1,3840 / sw,2160 / sh);
-  const cw = Math.max(1,Math.floor(sw * scale)), ch = Math.max(1,Math.floor(sh * scale));
-  if (canvas.width !== cw) canvas.width = cw;
-  if (canvas.height !== ch) canvas.height = ch;
+  const width = Math.max(1,Math.floor(sw * scale)), height = Math.max(1,Math.floor(sh * scale));
+  return {videoWidth:vw,videoHeight:vh,viewportWidth,viewportHeight,sx,sy,sw,sh,width,height,
+    key:[vw,vh,viewportWidth,viewportHeight,sx,sy,sw,sh,width,height].join(':')};
+}
+
+function sameJanFrameGeometry(geometry,video = el('janVideo')) {
+  try { return !!geometry && geometry.key === getJanFrameGeometry(video).key; }
+  catch (_) { return false; }
+}
+
+function captureJanFrame(geometry = null) {
+  const video = el('janVideo'), canvas = el('janCanvas');
+  const frame = geometry || getJanFrameGeometry(video);
+  const {sx,sy,sw,sh,width,height} = frame;
+  // Software fallback retains the source pixels of the whole visible preview.
+  // Never enlarge input; enlargement cannot restore missing barcode detail.
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
   const context = canvas.getContext('2d',{willReadFrequently:true});
   if (!context) throw {name:'JanCaptureError'};
   context.imageSmoothingEnabled = false;
-  context.drawImage(video,sx,sy,sw,sh,0,0,cw,ch);
+  context.drawImage(video,sx,sy,sw,sh,0,0,width,height);
   return canvas;
 }
 
@@ -1810,11 +1932,10 @@ async function readJanFrame(token, epoch) {
     if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0 && video.currentTime !== janScanner.lastFrameTime) {
       janScanner.lastFrameTime = video.currentTime;
       janScanner.lastFrameAt = Date.now();
-      const canvas = captureJanFrame();
       const frameContext = {generation:token,epoch,capturedAt:Date.now()};
       let decoder = janScanner.decoder;
       let codes;
-      try { codes = await decodeJanCanvas(decoder,canvas,frameContext); }
+      try { codes = await decodeJanCanvas(decoder,null,frameContext,video); }
       catch (error) {
         if (!canReadJan(token,epoch)) return;
         if (decoder.kind !== 'native') throw error;
@@ -1826,7 +1947,7 @@ async function readJanFrame(token, epoch) {
         decoder = fallback;
         clearJanStreak();
         setJanStatus('');
-        codes = await decodeJanCanvas(decoder,canvas,frameContext);
+        codes = await decodeJanCanvas(decoder,null,frameContext,video);
       }
       if (!canReadJan(token,epoch)) return;
       const unique = [...new Set(codes.map(normalizeJanForRecord).filter(Boolean))];
